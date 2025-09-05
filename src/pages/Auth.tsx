@@ -1,295 +1,351 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function Auth() {
+interface AuthProps {
+  navigation: any;
+}
+
+export default function Auth({ navigation }: AuthProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    fullName: ""
+    email: '',
+    password: '',
+    fullName: ''
   });
-  const navigate = useNavigate();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    // Check if user is already authenticated
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/home');
-      }
-    };
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (session && event === 'SIGNED_IN') {
-          navigate('/home');
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [field]: value
     }));
   };
 
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
+      Alert.alert('Missing Information', 'Please fill in all required fields.');
       return false;
     }
 
     if (!isLogin && !formData.fullName) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter your full name.",
-        variant: "destructive"
-      });
+      Alert.alert('Missing Information', 'Please enter your full name.');
       return false;
     }
 
     if (formData.password.length < 6) {
-      toast({
-        title: "Password Too Short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive"
-      });
+      Alert.alert('Password Too Short', 'Password must be at least 6 characters long.');
       return false;
     }
 
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: "Login Failed",
-              description: "Invalid email or password. Please try again.",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "Login Error",
-              description: error.message,
-              variant: "destructive"
-            });
+      // Simulate authentication
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      Alert.alert(
+        isLogin ? 'Welcome back!' : 'Account Created!',
+        isLogin ? 'You have been successfully logged in.' : 'Your account has been created successfully.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Home')
           }
-          return;
-        }
-
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in.",
-        });
-
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-            data: {
-              full_name: formData.fullName
-            }
-          }
-        });
-
-        if (error) {
-          if (error.message.includes('User already registered')) {
-            toast({
-              title: "Account Already Exists",
-              description: "An account with this email already exists. Please sign in instead.",
-              variant: "destructive"
-            });
-            setIsLogin(true);
-          } else {
-            toast({
-              title: "Signup Error",
-              description: error.message,
-              variant: "destructive"
-            });
-          }
-          return;
-        }
-
-        toast({
-          title: "Account Created!",
-          description: "Your account has been created successfully. Please check your email for verification.",
-        });
-      }
+        ]
+      );
     } catch (error) {
-      toast({
-        title: "Unexpected Error",
-        description: "Something went wrong. Please try again later.",
-        variant: "destructive"
-      });
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">AgroEng AI</h1>
-          <p className="text-muted-foreground">
-            {isLogin ? "Welcome back to your farming assistant" : "Join the smart farming revolution"}
-          </p>
-        </div>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <LinearGradient
+            colors={['#f8fafc', '#e2e8f0']}
+            style={styles.gradient}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.appTitle}>AgroEng AI</Text>
+              <Text style={styles.appSubtitle}>
+                {isLogin ? "Welcome back to your farming assistant" : "Join the smart farming revolution"}
+              </Text>
+            </View>
 
-        {/* Auth Form */}
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold">
-                {isLogin ? "Sign In" : "Create Account"}
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                {isLogin ? "Access your plant diagnosis history" : "Start protecting your crops today"}
-              </p>
-            </div>
+            {/* Auth Form */}
+            <View style={styles.formContainer}>
+              <View style={styles.formHeader}>
+                <Text style={styles.formTitle}>
+                  {isLogin ? "Sign In" : "Create Account"}
+                </Text>
+                <Text style={styles.formSubtitle}>
+                  {isLogin ? "Access your plant diagnosis history" : "Start protecting your crops today"}
+                </Text>
+              </View>
 
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fullName"
-                    name="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    required={!isLogin}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="pl-10 pr-10"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
               {!isLogin && (
-                <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters long
-                </p>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Full Name</Text>
+                  <View style={styles.inputWrapper}>
+                    <Ionicons name="person-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="Enter your full name"
+                      value={formData.fullName}
+                      onChangeText={(value) => handleInputChange('fullName', value)}
+                      autoCapitalize="words"
+                    />
+                  </View>
+                </View>
               )}
-            </div>
 
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-lg font-semibold"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isLogin ? "Signing In..." : "Creating Account..."}
-                </>
-              ) : (
-                isLogin ? "Sign In" : "Create Account"
-              )}
-            </Button>
-          </form>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="mail-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChangeText={(value) => handleInputChange('email', value)}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setFormData({ email: "", password: "", fullName: "" });
-                }}
-                className="ml-2 text-primary hover:underline font-medium"
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.inputWrapper}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#6b7280" style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.textInput, { paddingRight: 50 }]}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChangeText={(value) => handleInputChange('password', value)}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.passwordToggle}
+                  >
+                    <Ionicons 
+                      name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                      size={20} 
+                      color="#6b7280" 
+                    />
+                  </TouchableOpacity>
+                </View>
+                {!isLogin && (
+                  <Text style={styles.helperText}>
+                    Password must be at least 6 characters long
+                  </Text>
+                )}
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleSubmit}
+                disabled={isLoading}
+                style={styles.submitButton}
               >
-                {isLogin ? "Sign up" : "Sign in"}
-              </button>
-            </p>
-          </div>
-        </Card>
+                <LinearGradient
+                  colors={['#22c55e', '#16a34a']}
+                  style={styles.submitGradient}
+                >
+                  <Text style={styles.submitText}>
+                    {isLoading ? "Processing..." : (isLogin ? "Sign In" : "Create Account")}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-muted-foreground">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
-        </div>
-      </div>
-    </div>
+              <View style={styles.switchContainer}>
+                <Text style={styles.switchText}>
+                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsLogin(!isLogin);
+                    setFormData({ email: '', password: '', fullName: '' });
+                  }}
+                >
+                  <Text style={styles.switchLink}>
+                    {isLogin ? "Sign up" : "Sign in"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>
+                By continuing, you agree to our Terms of Service and Privacy Policy
+              </Text>
+            </View>
+          </LinearGradient>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  gradient: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#22c55e',
+    marginBottom: 8,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  formContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  formHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  formTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  formSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    height: 48,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  passwordToggle: {
+    padding: 4,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  submitButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  submitGradient: {
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  submitText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  switchText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  switchLink: {
+    fontSize: 14,
+    color: '#22c55e',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+});

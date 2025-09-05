@@ -1,123 +1,336 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import { Camera, Search, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  SafeAreaView,
+  StatusBar,
+  Animated,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const slides = [
+const { width, height } = Dimensions.get('window');
+
+interface Slide {
+  icon: string;
+  title: string;
+  description: string;
+  gradient: string[];
+}
+
+const slides: Slide[] = [
   {
-    icon: Camera,
+    icon: "📷",
     title: "Snap. Compare. Save Your Crops.",
     description: "Take a photo of any plant or crop to get instant health insights powered by AI.",
-    gradient: "bg-gradient-to-br from-primary/20 to-accent/20"
+    gradient: ['#22c55e', '#16a34a']
   },
   {
-    icon: Search,
+    icon: "🔍",
     title: "AI diagnoses issues instantly & recommends solutions.",
     description: "See side-by-side comparisons with healthy plants and get expert recommendations.",
-    gradient: "bg-gradient-to-br from-accent/20 to-success/20"
+    gradient: ['#16a34a', '#15803d']
   },
   {
-    icon: Shield,
+    icon: "🛡️",
     title: "Protect your yield. Anytime. Anywhere.",
     description: "Works offline with multilingual support. Your farming assistant is always ready.",
-    gradient: "bg-gradient-to-br from-success/20 to-primary/20"
+    gradient: ['#15803d', '#22c55e']
   }
 ];
 
-export default function Onboarding() {
+interface OnboardingProps {
+  navigation: any;
+}
+
+export default function Onboarding({ navigation }: OnboardingProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const navigate = useNavigate();
+  const fadeAnim = new Animated.Value(1);
 
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
       setCurrentSlide(currentSlide + 1);
     } else {
-      navigate('/auth');
+      navigation.navigate('Auth');
     }
   };
 
   const prevSlide = () => {
     if (currentSlide > 0) {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
       setCurrentSlide(currentSlide - 1);
     }
   };
 
+  const goToSlide = (index: number) => {
+    if (index !== currentSlide) {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      setCurrentSlide(index);
+    }
+  };
+
   const currentSlideData = slides[currentSlide];
-  const Icon = currentSlideData.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md">
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      
+      <View style={styles.content}>
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">AgroEng AI</h1>
-          <p className="text-muted-foreground">Your Smart Farming Assistant</p>
-        </div>
+        <View style={styles.header}>
+          <Text style={styles.appTitle}>AgroEng AI</Text>
+          <Text style={styles.appSubtitle}>Your Smart Farming Assistant</Text>
+        </View>
 
         {/* Slide Content */}
-        <Card className={`${currentSlideData.gradient} border-0 p-8 mb-8 animate-fade-in`}>
-          <div className="text-center space-y-6">
-            <div className="flex justify-center">
-              <div className="p-4 bg-primary/10 rounded-full">
-                <Icon className="h-12 w-12 text-primary" />
-              </div>
-            </div>
-            
-            <h2 className="text-2xl font-bold text-foreground leading-tight">
-              {currentSlideData.title}
-            </h2>
-            
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              {currentSlideData.description}
-            </p>
-          </div>
-        </Card>
+        <Animated.View style={[styles.slideContainer, { opacity: fadeAnim }]}>
+          <LinearGradient
+            colors={currentSlideData.gradient}
+            style={styles.slideCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.slideContent}>
+              <View style={styles.iconContainer}>
+                <Text style={styles.slideIcon}>{currentSlideData.icon}</Text>
+              </View>
+              
+              <Text style={styles.slideTitle}>{currentSlideData.title}</Text>
+              
+              <Text style={styles.slideDescription}>
+                {currentSlideData.description}
+              </Text>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Pagination Dots */}
-        <div className="flex justify-center space-x-2 mb-8">
+        <View style={styles.pagination}>
           {slides.map((_, index) => (
-            <button
+            <TouchableOpacity
               key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentSlide 
-                  ? 'bg-primary scale-125' 
-                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
+              onPress={() => goToSlide(index)}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: index === currentSlide ? '#22c55e' : '#d1d5db',
+                  transform: [{ scale: index === currentSlide ? 1.2 : 1 }]
+                }
+              ]}
             />
           ))}
-        </div>
+        </View>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={prevSlide}
+        <View style={styles.navigation}>
+          <TouchableOpacity
+            onPress={prevSlide}
             disabled={currentSlide === 0}
-            className="h-12 w-12"
+            style={[
+              styles.navButton,
+              styles.prevButton,
+              { opacity: currentSlide === 0 ? 0.3 : 1 }
+            ]}
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+            <Text style={styles.navButtonText}>←</Text>
+          </TouchableOpacity>
 
-          <Button
-            onClick={nextSlide}
-            className="flex-1 mx-4 h-12 text-lg font-semibold"
+          <TouchableOpacity
+            onPress={nextSlide}
+            style={[styles.navButton, styles.nextButton]}
           >
-            {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
-            {currentSlide < slides.length - 1 && <ChevronRight className="ml-2 h-5 w-5" />}
-          </Button>
+            <LinearGradient
+              colors={['#22c55e', '#16a34a']}
+              style={styles.nextButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Text style={styles.nextButtonText}>
+                {currentSlide === slides.length - 1 ? 'Get Started' : 'Next →'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/auth')}
-            className="h-12 px-4 text-muted-foreground"
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Auth')}
+            style={styles.skipButton}
           >
-            Skip
-          </Button>
-        </div>
-      </div>
-    </div>
+            <Text style={styles.skipButtonText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingVertical: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#22c55e',
+    marginBottom: 8,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  slideContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    marginBottom: 40,
+  },
+  slideCard: {
+    borderRadius: 24,
+    padding: 32,
+    marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  slideContent: {
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  slideIcon: {
+    fontSize: 40,
+  },
+  slideTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 32,
+  },
+  slideDescription: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  pagination: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginHorizontal: 4,
+  },
+  navigation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  navButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  prevButton: {
+    backgroundColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  navButtonText: {
+    fontSize: 20,
+    color: '#374151',
+    fontWeight: '600',
+  },
+  nextButton: {
+    flex: 1,
+    marginHorizontal: 16,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+  },
+  nextButtonGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 28,
+  },
+  nextButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  skipButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  skipButtonText: {
+    fontSize: 16,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+});
