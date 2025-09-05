@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { PageLayout } from "@/components/ui/page-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Switch,
+  Alert,
+} from 'react-native';
 import { 
   User, 
   Globe, 
@@ -21,24 +25,20 @@ import {
   Download,
   MapPin,
   Sprout
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+} from "lucide-react-native";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
-import { ProfileEditor } from "@/components/ProfileEditor";
-import { SubscriptionPlans } from "@/components/SubscriptionPlans";
-import { SubscriptionLimits } from "@/components/SubscriptionLimits";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useOfflineStorage } from "@/hooks/useOfflineStorage";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function Settings() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+interface SettingsProps {
+  navigation: any;
+}
+
+export default function Settings({ navigation }: SettingsProps) {
   const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
@@ -94,10 +94,10 @@ export default function Settings() {
   const handleAudioLanguageChange = async (value: string) => {
     setAudioLanguage(value);
     await updateProfile({ audio_language: value });
-    toast({
-      title: t('toast.languageUpdated'),
-      description: `${t('settings.audioLanguage')}: ${audioLanguages.find(lang => lang.value === value)?.label}`,
-    });
+    Alert.alert(
+      t('toast.languageUpdated'),
+      `${t('settings.audioLanguage')}: ${audioLanguages.find(lang => lang.value === value)?.label}`
+    );
   };
 
   // Handler to update display language
@@ -111,10 +111,10 @@ export default function Settings() {
       updateProfile({ audio_language: newLanguage });
     }
     
-    toast({
-      title: t('toast.languageUpdated'),
-      description: `${t('settings.language')}: ${displayLanguages.find(lang => lang.value === value)?.label}`,
-    });
+    Alert.alert(
+      t('toast.languageUpdated'),
+      `${t('settings.language')}: ${displayLanguages.find(lang => lang.value === value)?.label}`
+    );
   };
 
   // Handler for offline mode toggle
@@ -124,17 +124,11 @@ export default function Settings() {
     
     if (checked) {
       // Enable offline mode
-      toast({
-        title: t('toast.offlineModeEnabled'),
-        description: t('toast.offlineDesc'),
-      });
+      Alert.alert(t('toast.offlineModeEnabled'), t('toast.offlineDesc'));
     } else {
       // Disable offline mode and clear cache
       clearOfflineData();
-      toast({
-        title: t('toast.offlineModeDisabled'),
-        description: t('toast.onlineDesc'),
-      });
+      Alert.alert(t('toast.offlineModeDisabled'), t('toast.onlineDesc'));
     }
   };
 
@@ -151,10 +145,10 @@ export default function Settings() {
       document.documentElement.classList.remove('dark');
     }
     
-    toast({
-      title: t('toast.themeUpdated'),
-      description: `${t('toast.switchedTo')} ${checked ? 'dark' : 'light'} ${t('toast.mode')}`,
-    });
+    Alert.alert(
+      t('toast.themeUpdated'),
+      `${t('toast.switchedTo')} ${checked ? 'dark' : 'light'} ${t('toast.mode')}`
+    );
   };
 
   const audioLanguages = [
@@ -205,10 +199,7 @@ export default function Settings() {
 
   const handleDownloadCache = async () => {
     if (!offlineMode) {
-      toast({
-        title: t('settings.offlineMode'),
-        description: t('toast.offlineDesc'),
-      });
+      Alert.alert(t('settings.offlineMode'), t('toast.offlineDesc'));
       return;
     }
 
@@ -216,16 +207,9 @@ export default function Settings() {
     
     try {
       await downloadCache();
-      toast({
-        title: t('toast.cacheDownloaded'),
-        description: t('toast.cacheDesc'),
-      });
+      Alert.alert(t('toast.cacheDownloaded'), t('toast.cacheDesc'));
     } catch (error) {
-      toast({
-        title: "Download Failed",
-        description: "Failed to download offline cache. Please try again.",
-        variant: "destructive",
-      });
+      Alert.alert("Download Failed", "Failed to download offline cache. Please try again.");
     } finally {
       setIsDownloadingCache(false);
     }
@@ -233,11 +217,7 @@ export default function Settings() {
 
   const handleAssignAdminRole = async () => {
     if (!adminEmail.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address",
-        variant: "destructive"
-      });
+      Alert.alert("Error", "Please enter an email address");
       return;
     }
 
@@ -249,17 +229,10 @@ export default function Settings() {
 
       if (error) throw error;
 
-      toast({
-        title: "Admin Role Assigned",
-        description: `Successfully assigned admin role to ${adminEmail}`,
-      });
+      Alert.alert("Admin Role Assigned", `Successfully assigned admin role to ${adminEmail}`);
       setAdminEmail('');
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to assign admin role",
-        variant: "destructive"
-      });
+      Alert.alert("Error", error.message || "Failed to assign admin role");
     } finally {
       setAssigningRole(false);
     }
@@ -287,61 +260,45 @@ export default function Settings() {
           icon: Languages,
           label: t('settings.language'),
           description: displayLanguages.find(lang => lang.value === language)?.label || "English",
-          control: (
-            <Select value={language} onValueChange={handleDisplayLanguageChange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border shadow-lg z-50">
-                {displayLanguages.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )
+          action: () => {
+            Alert.alert(
+              "Select Language",
+              "Choose your preferred language",
+              displayLanguages.map(lang => ({
+                text: lang.label,
+                onPress: () => handleDisplayLanguageChange(lang.value)
+              }))
+            );
+          }
         },
         {
           icon: Volume2,
           label: t('settings.audioLanguage'),
           description: audioLanguages.find(lang => lang.value === audioLanguage)?.label || "English",
-          control: (
-            <Select value={audioLanguage} onValueChange={handleAudioLanguageChange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-background border border-border shadow-lg z-50">
-                {audioLanguages.map((lang) => (
-                  <SelectItem key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )
+          action: () => {
+            Alert.alert(
+              "Select Audio Language",
+              "Choose your preferred audio language",
+              audioLanguages.map(lang => ({
+                text: lang.label,
+                onPress: () => handleAudioLanguageChange(lang.value)
+              }))
+            );
+          }
         },
         {
           icon: Moon,
           label: t('settings.darkMode'),
           description: t('settings.darkModeDesc'),
-          control: (
-            <Switch 
-              checked={darkMode} 
-              onCheckedChange={handleDarkModeChange}
-            />
-          )
+          control: darkMode,
+          onToggle: handleDarkModeChange
         },
         {
           icon: Wifi,
           label: t('settings.offlineMode'),
           description: t('settings.offlineModeDesc'),
-          control: (
-            <Switch 
-              checked={offlineMode} 
-              onCheckedChange={handleOfflineModeChange}
-            />
-          )
+          control: offlineMode,
+          onToggle: handleOfflineModeChange
         }
       ]
     },
@@ -354,13 +311,7 @@ export default function Settings() {
           description: `${t('settings.downloadCacheDesc')} (${cacheSize})`,
           action: handleDownloadCache,
           showArrow: false,
-          control: isDownloadingCache ? (
-            <div className="text-sm text-muted-foreground">{t('settings.downloading')}</div>
-          ) : (
-            <Button variant="outline" size="sm" onClick={handleDownloadCache} disabled={!offlineMode}>
-              {t('settings.download')}
-            </Button>
-          )
+          action: handleDownloadCache
         }
       ]
     },
@@ -372,7 +323,7 @@ export default function Settings() {
           label: "Upgrade Plan",
           description: t('settings.premiumDesc'),
           action: () => {
-            setShowSubscriptionPlans(true);
+            Alert.alert("Subscription", "Premium features coming soon!");
           },
           showArrow: true,
           highlight: true
@@ -387,23 +338,9 @@ export default function Settings() {
           icon: Shield,
           label: "Assign Admin Role",
           description: "Grant admin access to users",
-          control: (
-            <div className="flex items-center space-x-2">
-              <Input
-                placeholder="Enter email address"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="w-48"
-              />
-              <Button 
-                onClick={handleAssignAdminRole}
-                disabled={assigningRole || !adminEmail.trim()}
-                size="sm"
-              >
-                {assigningRole ? "Assigning..." : "Assign"}
-              </Button>
-            </div>
-          )
+          action: () => {
+            Alert.prompt("Assign Admin Role", "Enter email address:", handleAssignAdminRole);
+          }
         }
       ]
     }] : []),
@@ -415,10 +352,7 @@ export default function Settings() {
           label: t('settings.helpSupport'),
           description: t('settings.helpSupportDesc'),
           action: () => {
-            toast({
-              title: t('toast.helpSupport'),
-              description: t('toast.contactUs'),
-            });
+            Alert.alert(t('toast.helpSupport'), t('toast.contactUs'));
           },
           showArrow: true
         },
@@ -427,10 +361,7 @@ export default function Settings() {
           label: t('settings.privacyPolicy'),
           description: t('settings.privacyPolicyDesc'),
           action: () => {
-            toast({
-              title: t('toast.privacyTitle'),
-              description: t('toast.privacyDesc'),
-            });
+            Alert.alert(t('toast.privacyTitle'), t('toast.privacyDesc'));
           },
           showArrow: true
         }
@@ -448,147 +379,128 @@ export default function Settings() {
     }
   }, []);
 
-  if (showProfileEditor) {
-    return (
-      <PageLayout title={t('settings.title')} showNavigation={true}>
-        <div className="p-4">
-          <ProfileEditor onClose={() => setShowProfileEditor(false)} />
-        </div>
-      </PageLayout>
-    );
-  }
-
-  if (showSubscriptionPlans) {
-    return (
-      <PageLayout title={t('Subscription Plans')} showNavigation={false}>
-        <div className="p-4">
-          <Button 
-            variant="outline" 
-            onClick={() => setShowSubscriptionPlans(false)}
-            className="mb-4"
-          >
-            ← {t('Back to Settings')}
-          </Button>
-          <SubscriptionPlans />
-        </div>
-      </PageLayout>
-    );
-  }
-
   return (
-    <PageLayout title={t('settings.title')} showNavigation={true}>
-      <div className="p-4 space-y-6">
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{t('settings.title')}</Text>
+      </View>
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
         {/* User Info Header */}
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
-              <User className="h-8 w-8 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold">
+        <View style={styles.userCard}>
+          <View style={styles.userContent}>
+            <View style={styles.userAvatar}>
+              <User size={32} color="#22c55e" />
+            </View>
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>
                 {profile?.full_name || user?.email?.split('@')[0] || t('settings.farmer')}
-              </h3>
-              <p className="text-muted-foreground">
+              </Text>
+              <Text style={styles.userEmail}>
                 {profile?.phone_number || user?.email || 'farmer@example.com'}
-              </p>
-              <div className="flex items-center space-x-4 mt-1">
-                <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                  <MapPin className="h-3 w-3" />
-                  <span>{profile?.region || t('settings.addLocation')}</span>
-                </div>
+              </Text>
+              <View style={styles.userMeta}>
+                <View style={styles.userMetaItem}>
+                  <MapPin size={12} color="#6b7280" />
+                  <Text style={styles.userMetaText}>{profile?.region || t('settings.addLocation')}</Text>
+                </View>
                 {profile?.farming_experience && (
-                  <div className="flex items-center space-x-1 text-sm text-muted-foreground">
-                    <Sprout className="h-3 w-3" />
-                    <span className="capitalize">{profile.farming_experience} {t('settings.farmer')}</span>
-                  </div>
+                  <View style={styles.userMetaItem}>
+                    <Sprout size={12} color="#6b7280" />
+                    <Text style={styles.userMetaText}>{profile.farming_experience} {t('settings.farmer')}</Text>
+                  </View>
                 )}
-              </div>
+              </View>
               {profile?.primary_crops && profile.primary_crops.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
+                <View style={styles.cropsList}>
                   {profile.primary_crops.slice(0, 3).map((crop) => (
-                    <Badge key={crop} variant="secondary" className="text-xs">
-                      {crop}
-                    </Badge>
+                    <View key={crop} style={styles.cropBadge}>
+                      <Text style={styles.cropBadgeText}>{crop}</Text>
+                    </View>
                   ))}
                   {profile.primary_crops.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{profile.primary_crops.length - 3} more
-                    </Badge>
+                    <View style={styles.cropBadgeOutline}>
+                      <Text style={styles.cropBadgeOutlineText}>+{profile.primary_crops.length - 3} more</Text>
+                    </View>
                   )}
-                </div>
+                </View>
               )}
-            </div>
-          </div>
-        </Card>
+            </View>
+          </View>
+        </View>
 
         {/* Settings Groups */}
         {settingsGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+          <View key={groupIndex} style={styles.settingsGroup}>
+            <Text style={styles.groupTitle}>
               {group.title}
-            </h3>
+            </Text>
             
-            <Card className="divide-y divide-border">
+            <View style={styles.settingsCard}>
               {group.items.map((item, itemIndex) => {
                 const Icon = item.icon;
                 return (
-                  <div
+                  <TouchableOpacity
                     key={itemIndex}
-                    className={`p-4 flex items-center justify-between ${
-                      item.action ? 'cursor-pointer hover:bg-muted/50' : ''
-                    } ${item.highlight ? 'bg-gradient-to-r from-primary/5 to-accent/5' : ''}`}
-                    onClick={item.action}
+                    style={[
+                      styles.settingsItem,
+                      item.highlight && styles.highlightItem,
+                      itemIndex < group.items.length - 1 && styles.settingsItemBorder
+                    ]}
+                    onPress={item.action}
+                    disabled={!item.action}
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className={`p-2 rounded-full ${
-                        item.highlight ? 'bg-primary/20' : 'bg-muted/50'
-                      }`}>
-                        <Icon className={`h-4 w-4 ${
-                          item.highlight ? 'text-primary' : 'text-muted-foreground'
-                        }`} />
-                      </div>
-                      <div>
-                        <p className={`font-medium ${
-                          item.highlight ? 'text-primary' : ''
-                        }`}>
+                    <View style={styles.settingsItemLeft}>
+                      <View style={[styles.settingsIcon, item.highlight && styles.highlightIcon]}>
+                        <Icon size={16} color={item.highlight ? "#22c55e" : "#6b7280"} />
+                      </View>
+                      <View style={styles.settingsText}>
+                        <Text style={[styles.settingsLabel, item.highlight && styles.highlightLabel]}>
                           {item.label}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
+                        </Text>
+                        <Text style={styles.settingsDescription}>
                           {item.description}
-                        </p>
-                      </div>
-                    </div>
+                        </Text>
+                      </View>
+                    </View>
                     
-                    <div className="flex items-center">
-                      {item.control}
+                    <View style={styles.settingsItemRight}>
+                      {typeof item.control === 'boolean' && item.onToggle ? (
+                        <Switch
+                          value={item.control}
+                          onValueChange={item.onToggle}
+                          trackColor={{ false: '#e5e7eb', true: '#22c55e' }}
+                          thumbColor={item.control ? '#ffffff' : '#f3f4f6'}
+                        />
+                      ) : null}
                       {item.showArrow && (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground ml-2" />
+                        <ChevronRight size={16} color="#6b7280" />
                       )}
-                    </div>
-                  </div>
+                    </View>
+                  </TouchableOpacity>
                 );
               })}
-            </Card>
-          </div>
+            </View>
+          </View>
         ))}
 
-
         {/* App Info */}
-        <Card className="p-4 text-center bg-muted/30">
-          <div className="space-y-2">
-            <h4 className="font-semibold">AgroEng AI</h4>
-            <p className="text-sm text-muted-foreground">{t('settings.version')}</p>
-            <p className="text-xs text-muted-foreground">
+        <View style={styles.appInfoCard}>
+          <View style={styles.appInfoContent}>
+            <Text style={styles.appInfoTitle}>AgroEng AI</Text>
+            <Text style={styles.appInfoVersion}>{t('settings.version')}</Text>
+            <Text style={styles.appInfoMade}>
               {t('settings.madeWith')}
-            </p>
+            </Text>
             {profile?.region && (
-              <p className="text-xs text-muted-foreground">
+              <Text style={styles.appInfoServing}>
                 {t('settings.serving')} {profile.region}
-              </p>
+              </Text>
             )}
-          </div>
-        </Card>
-      </div>
-    </PageLayout>
+          </View>
+        </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
