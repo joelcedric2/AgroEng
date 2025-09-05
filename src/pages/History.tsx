@@ -1,209 +1,540 @@
-import { useState } from "react";
-import { PageLayout } from "@/components/ui/page-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
-import { Camera, Calendar, Filter, Download, Wifi, WifiOff, MoreVertical, Trash2, BarChart3, CheckCircle, AlertTriangle } from "lucide-react";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Image,
+  Alert,
+} from 'react-native';
+import { Camera, Calendar, Filter, Download, Wifi, WifiOff, MoreVertical, Trash2, BarChart3, CheckCircle, AlertTriangle } from "lucide-react-native";
 import { useScans } from "@/hooks/useScans";
-import { useToast } from "@/hooks/use-toast";
 
-export default function History() {
-  const navigate = useNavigate();
+interface HistoryProps {
+  navigation: any;
+}
+
+export default function History({ navigation }: HistoryProps) {
   const { scans, loading, deleteScan } = useScans();
-  const { toast } = useToast();
   const [isOnline] = useState(navigator.onLine);
 
   const handleDeleteScan = async (scanId: string) => {
     const success = await deleteScan(scanId);
     if (success) {
-      toast({
-        title: "Scan deleted",
-        description: "The plant diagnosis has been removed.",
-      });
+      Alert.alert("Scan deleted", "The plant diagnosis has been removed.");
     }
   };
 
   const getSeverityColor = (severity: string | null) => {
     switch (severity) {
-      case "high": return "bg-destructive/10 text-destructive border-destructive/20";
-      case "medium": return "bg-warning/10 text-warning border-warning/20";
-      case "low": return "bg-success/10 text-success border-success/20";
-      default: return "bg-muted/10 text-muted-foreground border-muted/20";
+      case "high": return "#ef4444";
+      case "medium": return "#f59e0b";
+      case "low": return "#22c55e";
+      default: return "#6b7280";
     }
   };
 
   const getStatusIcon = (issue: string | null) => {
-    if (!issue || issue.toLowerCase().includes('healthy')) return <CheckCircle className="h-5 w-5 text-success" />;
-    if (issue.toLowerCase().includes('urgent') || issue.toLowerCase().includes('critical')) return <AlertTriangle className="h-5 w-5 text-destructive" />;
-    return <AlertTriangle className="h-5 w-5 text-warning" />;
+    if (!issue || issue.toLowerCase().includes('healthy')) return <CheckCircle size={20} color="#22c55e" />;
+    if (issue.toLowerCase().includes('urgent') || issue.toLowerCase().includes('critical')) return <AlertTriangle size={20} color="#ef4444" />;
+    return <AlertTriangle size={20} color="#f59e0b" />;
   };
 
   return (
-    <PageLayout title="Diagnosis History" showNavigation={true}>
-      <div className="p-4 space-y-6">
-        {/* Offline Status Indicator */}
-        <Card className={`p-4 ${isOnline ? 'bg-success/5 border-success/20' : 'bg-warning/5 border-warning/20'}`}>
-          <div className="flex items-center space-x-3">
-            {isOnline ? (
-              <Wifi className="h-4 w-4 text-success" />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Diagnosis History</Text>
+      </View>
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Offline Status Indicator */}
+          <View style={[styles.statusCard, isOnline ? styles.onlineCard : styles.offlineCard]}>
+            <View style={styles.statusContent}>
+              {isOnline ? (
+                <Wifi size={16} color="#22c55e" />
+              ) : (
+                <WifiOff size={16} color="#f59e0b" />
+              )}
+              <View style={styles.statusText}>
+                <Text style={styles.statusTitle}>
+                  {isOnline ? 'Online' : 'Offline Mode'}
+                </Text>
+                <Text style={styles.statusSubtitle}>
+                  {isOnline 
+                    ? 'All data synced'
+                    : 'Viewing cached history. Some features may be limited.'
+                  }
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Summary Stats */}
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={styles.statNumber}>{scans.length}</Text>
+              <Text style={styles.statLabel}>Total Scans</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statNumber, { color: '#22c55e' }]}>
+                {scans.filter(scan => !scan.issue_detected || scan.issue_detected.toLowerCase().includes('healthy')).length}
+              </Text>
+              <Text style={styles.statLabel}>Healthy</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statNumber, { color: '#f59e0b' }]}>
+                {scans.filter(scan => scan.issue_detected && !scan.issue_detected.toLowerCase().includes('healthy')).length}
+              </Text>
+              <Text style={styles.statLabel}>Issues Found</Text>
+            </View>
+          </View>
+
+          {/* Quick Actions */}
+          <View style={styles.quickActions}>
+            <TouchableOpacity 
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('Camera')}
+            >
+              <Camera size={16} color="#ffffff" />
+              <Text style={styles.primaryButtonText}>New Scan</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryButton}>
+              <Filter size={16} color="#22c55e" />
+              <Text style={styles.secondaryButtonText}>Filter</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* History List */}
+          <View style={styles.historySection}>
+            <Text style={styles.sectionTitle}>Recent Diagnoses</Text>
+            
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading your scan history...</Text>
+              </View>
+            ) : scans.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <View style={styles.emptyContent}>
+                  <BarChart3 size={64} color="#9ca3af" />
+                  <Text style={styles.emptyTitle}>No scans yet</Text>
+                  <Text style={styles.emptyDescription}>
+                    Start by taking a photo of your plants to build your diagnosis history
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.emptyButton}
+                    onPress={() => navigation.navigate('Camera')}
+                  >
+                    <Camera size={16} color="#ffffff" />
+                    <Text style={styles.emptyButtonText}>Take First Scan</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
-              <WifiOff className="h-4 w-4 text-warning" />
-            )}
-            <div>
-              <p className="text-sm font-medium">
-                {isOnline ? 'Online' : 'Offline Mode'}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {isOnline 
-                  ? 'All data synced'
-                  : 'Viewing cached history. Some features may be limited.'
-                }
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-4">
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{scans.length}</div>
-            <div className="text-xs text-muted-foreground">Total Scans</div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-success">
-              {scans.filter(scan => !scan.issue_detected || scan.issue_detected.toLowerCase().includes('healthy')).length}
-            </div>
-            <div className="text-xs text-muted-foreground">Healthy</div>
-          </Card>
-          <Card className="p-4 text-center">
-            <div className="text-2xl font-bold text-warning">
-              {scans.filter(scan => scan.issue_detected && !scan.issue_detected.toLowerCase().includes('healthy')).length}
-            </div>
-            <div className="text-xs text-muted-foreground">Issues Found</div>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex space-x-3">
-          <Button 
-            size="sm" 
-            onClick={() => navigate('/camera')}
-            className="flex-1"
-          >
-            <Camera className="mr-2 h-4 w-4" />
-            New Scan
-          </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            Filter
-          </Button>
-        </div>
-
-        {/* History List */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Recent Diagnoses</h3>
-          
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Loading your scan history...</p>
-            </div>
-          ) : scans.length === 0 ? (
-            <Card className="p-8 text-center bg-muted/20 border-dashed">
-              <div className="space-y-4">
-                <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground" />
-                <h3 className="font-semibold">No scans yet</h3>
-                <p className="text-muted-foreground">
-                  Start by taking a photo of your plants to build your diagnosis history
-                </p>
-                <Button onClick={() => navigate('/camera')}>
-                  <Camera className="mr-2 h-4 w-4" />
-                  Take First Scan
-                </Button>
-              </div>
-            </Card>
-          ) : (
-            scans.map((scan) => (
-              <Card key={scan.id} className="p-4 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-4">
-                  {scan.image_url ? (
-                    <img 
-                      src={scan.image_url} 
-                      alt={scan.plant_type || 'Plant'}
-                      className="w-16 h-16 rounded-lg object-cover border-2 border-border"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-lg bg-muted/30 border-2 border-dashed border-muted flex items-center justify-center">
-                      <Camera className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-semibold">{scan.plant_type || 'Unknown Plant'}</h4>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteScan(scan.id)}
-                        className="text-destructive hover:text-destructive/80"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(scan.issue_detected)}
-                      <span className="text-sm font-medium">
-                        {scan.issue_detected || 'Healthy'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        <span>{new Date(scan.created_at).toLocaleDateString()}</span>
-                      </div>
-                      {scan.severity && (
-                        <Badge 
-                          variant="outline" 
-                          className={getSeverityColor(scan.severity)}
+              scans.map((scan) => (
+                <View key={scan.id} style={styles.scanCard}>
+                  <View style={styles.scanContent}>
+                    {scan.image_url ? (
+                      <Image 
+                        source={{ uri: scan.image_url }}
+                        style={styles.scanImage}
+                      />
+                    ) : (
+                      <View style={styles.placeholderImage}>
+                        <Camera size={24} color="#9ca3af" />
+                      </View>
+                    )}
+                    <View style={styles.scanDetails}>
+                      <View style={styles.scanHeader}>
+                        <Text style={styles.scanTitle}>{scan.plant_type || 'Unknown Plant'}</Text>
+                        <TouchableOpacity 
+                          onPress={() => handleDeleteScan(scan.id)}
+                          style={styles.deleteButton}
                         >
-                          {scan.severity.charAt(0).toUpperCase() + scan.severity.slice(1)}
-                        </Badge>
+                          <Trash2 size={16} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                      
+                      <View style={styles.scanStatus}>
+                        {getStatusIcon(scan.issue_detected)}
+                        <Text style={styles.scanIssue}>
+                          {scan.issue_detected || 'Healthy'}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.scanMeta}>
+                        <View style={styles.scanDate}>
+                          <Calendar size={12} color="#6b7280" />
+                          <Text style={styles.scanDateText}>
+                            {new Date(scan.created_at).toLocaleDateString()}
+                          </Text>
+                        </View>
+                        {scan.severity && (
+                          <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(scan.severity) + '20' }]}>
+                            <Text style={[styles.severityText, { color: getSeverityColor(scan.severity) }]}>
+                              {scan.severity.charAt(0).toUpperCase() + scan.severity.slice(1)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                      
+                      {scan.confidence_score && (
+                        <Text style={styles.confidenceText}>
+                          Confidence: {Math.round(scan.confidence_score * 100)}%
+                        </Text>
                       )}
-                    </div>
-                    
-                    {scan.confidence_score && (
-                      <div className="text-xs text-muted-foreground">
-                        Confidence: {Math.round(scan.confidence_score * 100)}%
-                      </div>
-                    )}
 
-                    {scan.recommendations && (
-                      <div className="text-xs text-muted-foreground mt-2">
-                        <strong>Recommendations:</strong> {scan.recommendations.substring(0, 100)}...
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
-        </div>
+                      {scan.recommendations && (
+                        <Text style={styles.recommendationsText}>
+                          <Text style={styles.recommendationsLabel}>Recommendations:</Text> {scan.recommendations.substring(0, 100)}...
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
 
-        {/* Export Options */}
-        <Card className="p-4 bg-gradient-to-r from-primary/5 to-accent/5">
-          <div className="text-center space-y-3">
-            <h4 className="font-semibold">Export Your Data</h4>
-            <p className="text-sm text-muted-foreground">
-              Download your diagnosis history for farm records
-            </p>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Export PDF Report
-            </Button>
-          </div>
-        </Card>
-      </div>
-    </PageLayout>
+          {/* Export Options */}
+          <View style={styles.exportCard}>
+            <View style={styles.exportContent}>
+              <Text style={styles.exportTitle}>Export Your Data</Text>
+              <Text style={styles.exportDescription}>
+                Download your diagnosis history for farm records
+              </Text>
+              <TouchableOpacity style={styles.exportButton}>
+                <Download size={16} color="#22c55e" />
+                <Text style={styles.exportButtonText}>Export PDF Report</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingTop: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  statusCard: {
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+  },
+  onlineCard: {
+    backgroundColor: '#f0fdf4',
+    borderColor: '#bbf7d0',
+  },
+  offlineCard: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+  },
+  statusContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    marginLeft: 12,
+  },
+  statusTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+  statusSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  statCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#22c55e',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  primaryButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginLeft: 8,
+  },
+  secondaryButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginLeft: 8,
+  },
+  historySection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 16,
+  },
+  loadingContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  emptyCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  emptyContent: {
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  emptyButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emptyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginLeft: 8,
+  },
+  scanCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  scanContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scanImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    marginRight: 16,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+  },
+  placeholderImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  scanDetails: {
+    flex: 1,
+  },
+  scanHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scanTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  deleteButton: {
+    padding: 4,
+  },
+  scanStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scanIssue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1f2937',
+    marginLeft: 8,
+  },
+  scanMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scanDate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scanDateText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  severityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  severityText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  confidenceText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  recommendationsText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  recommendationsLabel: {
+    fontWeight: '600',
+  },
+  exportCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  exportContent: {
+    alignItems: 'center',
+  },
+  exportTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  exportDescription: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  exportButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  exportButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginLeft: 8,
+  },
+});

@@ -1,13 +1,21 @@
-import { useState } from "react";
-import { PageLayout } from "@/components/ui/page-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Lightbulb, Bug, Droplets, Sun, Volume2, Mic, MicOff, Loader2, RefreshCw, Cherry, Wheat, Carrot, Leaf } from "lucide-react";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { BookOpen, Lightbulb, Bug, Droplets, Sun, Volume2, Mic, MicOff, RefreshCw, Cherry, Wheat, Carrot, Leaf } from "lucide-react-native";
 import { useAITips } from "@/hooks/useAITips";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { useSpeechToText } from "@/hooks/useSpeechToText";
+
+interface TipsProps {
+  navigation: any;
+}
 
 const getIconForCategory = (category: string) => {
   switch (category.toLowerCase()) {
@@ -19,9 +27,10 @@ const getIconForCategory = (category: string) => {
   }
 };
 
-export default function Tips() {
+export default function Tips({ navigation }: TipsProps) {
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [selectedGuide, setSelectedGuide] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState('daily');
   
   const { dailyTips, cropGuides, seasonalAlerts, howToGuides, loading: aiLoading, regenerateContent } = useAITips();
   const { speak, loading: ttsLoading, isPlaying } = useTextToSpeech();
@@ -33,340 +42,835 @@ export default function Tips() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "Beginner": return "bg-success/10 text-success";
-      case "Intermediate": return "bg-warning/10 text-warning";
-      case "Advanced": return "bg-destructive/10 text-destructive";
-      default: return "bg-muted/10 text-muted-foreground";
+      case "Beginner": return "#22c55e";
+      case "Intermediate": return "#f59e0b";
+      case "Advanced": return "#ef4444";
+      default: return "#6b7280";
+    }
+  };
+
+  const getDifficultyBgColor = (difficulty: string) => {
+    switch (difficulty) {
+      case "Beginner": return "#f0fdf4";
+      case "Intermediate": return "#fffbeb";
+      case "Advanced": return "#fef2f2";
+      default: return "#f3f4f6";
     }
   };
 
   return (
-    <PageLayout title="Tips & Education" showNavigation={true}>
-      <div className="p-4 space-y-6">
-        {/* Voice Assistant */}
-        <Card className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary/20 rounded-full">
-                <Mic className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">Voice Assistant</p>
-                <p className="text-xs text-muted-foreground">
-                  Ask about your crops or describe what you see
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={isRecording ? stopRecording : startRecording}
-              disabled={sttLoading}
-              className={`${isRecording ? 'bg-destructive hover:bg-destructive/90' : 'bg-primary hover:bg-primary/90'}`}
-            >
-              {sttLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : isRecording ? (
-                <MicOff className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Seasonal Alerts */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-lg flex items-center">
-              <Lightbulb className="mr-2 h-5 w-5 text-warning" />
-              Seasonal Alerts
-            </h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => regenerateContent('seasonal-alerts', 2)}
-              disabled={aiLoading}
-            >
-              {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-            </Button>
-          </div>
-          {seasonalAlerts.map((alert, index) => (
-            <Card key={index} className={`p-4 ${
-              alert.urgency === "high" 
-                ? "bg-destructive/5 border-destructive/20" 
-                : "bg-warning/5 border-warning/20"
-            }`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold mb-2">{alert.title}</h4>
-                  <p className="text-sm text-muted-foreground">{alert.message}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleAudioPlay(`${alert.title}. ${alert.message}`, `alert-${index}`)}
-                  className={isPlaying(`alert-${index}`) ? "text-primary" : ""}
-                  disabled={ttsLoading}
-                >
-                  {ttsLoading && isPlaying(`alert-${index}`) ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="daily" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="daily">Daily Tips</TabsTrigger>
-            <TabsTrigger value="crops">Crop Guides</TabsTrigger>
-            <TabsTrigger value="guides">How-To</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="daily" className="space-y-4 mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">AI-Generated Daily Tips</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => regenerateContent('daily-tips')}
-                disabled={aiLoading}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Tips & Education</Text>
+      </View>
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Voice Assistant */}
+          <View style={styles.voiceCard}>
+            <View style={styles.voiceContent}>
+              <View style={styles.voiceLeft}>
+                <View style={styles.voiceIcon}>
+                  <Mic size={20} color="#22c55e" />
+                </View>
+                <View>
+                  <Text style={styles.voiceTitle}>Voice Assistant</Text>
+                  <Text style={styles.voiceSubtitle}>
+                    Ask about your crops or describe what you see
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={isRecording ? stopRecording : startRecording}
+                disabled={sttLoading}
+                style={[styles.voiceButton, isRecording ? styles.recordingButton : styles.idleButton]}
               >
-                {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                New Tips
-              </Button>
-            </div>
-            
-            {dailyTips.map((tip) => {
-              const Icon = getIconForCategory(tip.category);
-              const tipId = `tip-${tip.id}`;
-              return (
-                <Card key={tip.id} className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Icon className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{tip.title}</h4>
-                        <Badge className={getDifficultyColor(tip.difficulty)}>
-                          {tip.difficulty}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleAudioPlay(`${tip.title}. ${tip.content}`, tipId)}
-                      className={isPlaying(tipId) ? "text-primary" : ""}
-                      disabled={ttsLoading}
-                    >
-                      {ttsLoading && isPlaying(tipId) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {tip.content}
-                  </p>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => setSelectedTip(selectedTip === tip.id ? null : tip.id)}
+                {sttLoading ? (
+                  <Text style={styles.voiceButtonText}>...</Text>
+                ) : isRecording ? (
+                  <MicOff size={16} color="#ffffff" />
+                ) : (
+                  <Mic size={16} color="#ffffff" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Seasonal Alerts */}
+          <View style={styles.alertsSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionTitleContainer}>
+                <Lightbulb size={20} color="#f59e0b" />
+                <Text style={styles.sectionTitle}>Seasonal Alerts</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => regenerateContent('seasonal-alerts', 2)}
+                disabled={aiLoading}
+                style={styles.refreshButton}
+              >
+                <RefreshCw size={16} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+            {seasonalAlerts.map((alert, index) => (
+              <View key={index} style={[
+                styles.alertCard,
+                alert.urgency === "high" ? styles.highUrgencyCard : styles.mediumUrgencyCard
+              ]}>
+                <View style={styles.alertContent}>
+                  <View style={styles.alertText}>
+                    <Text style={styles.alertTitle}>{alert.title}</Text>
+                    <Text style={styles.alertMessage}>{alert.message}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleAudioPlay(`${alert.title}. ${alert.message}`, `alert-${index}`)}
+                    style={[styles.audioButton, isPlaying(`alert-${index}`) && styles.playingButton]}
+                    disabled={ttsLoading}
                   >
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    {selectedTip === tip.id ? "Show Less" : "Learn More"}
-                  </Button>
-                </Card>
-              );
-            })}
-          </TabsContent>
+                    <Volume2 size={16} color={isPlaying(`alert-${index}`) ? "#22c55e" : "#6b7280"} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
 
-          <TabsContent value="crops" className="space-y-4 mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">AI-Generated Crop Guides</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => regenerateContent('crop-guides')}
-                disabled={aiLoading}
+          {/* Tab Navigation */}
+          <View style={styles.tabContainer}>
+            <View style={styles.tabList}>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'daily' && styles.activeTab]}
+                onPress={() => setActiveTab('daily')}
               >
-                {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                New Guides
-              </Button>
-            </div>
-            
-            {cropGuides.map((crop, index) => {
-              const guideId = `guide-${index}`;
-              return (
-                <Card key={index} className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        {crop.icon === 'cherry' ? <Cherry className="h-6 w-6 text-primary" /> :
-                         crop.icon === 'wheat' ? <Wheat className="h-6 w-6 text-primary" /> :
-                         crop.icon === 'carrot' ? <Carrot className="h-6 w-6 text-primary" /> :
-                         <Leaf className="h-6 w-6 text-primary" />}
-                      </div>
-                      <h4 className="font-semibold text-lg">{crop.name}</h4>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleAudioPlay(`${crop.name} guide. Common issues: ${crop.commonIssues.join(', ')}. Tips: ${crop.tips}`, guideId)}
-                      className={isPlaying(guideId) ? "text-primary" : ""}
-                      disabled={ttsLoading}
-                    >
-                      {ttsLoading && isPlaying(guideId) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
+                <Text style={[styles.tabText, activeTab === 'daily' && styles.activeTabText]}>
+                  Daily Tips
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'crops' && styles.activeTab]}
+                onPress={() => setActiveTab('crops')}
+              >
+                <Text style={[styles.tabText, activeTab === 'crops' && styles.activeTabText]}>
+                  Crop Guides
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tab, activeTab === 'guides' && styles.activeTab]}
+                onPress={() => setActiveTab('guides')}
+              >
+                <Text style={[styles.tabText, activeTab === 'guides' && styles.activeTabText]}>
+                  How-To
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Tab Content */}
+            {activeTab === 'daily' && (
+              <View style={styles.tabContent}>
+                <View style={styles.tabHeader}>
+                  <Text style={styles.tabTitle}>AI-Generated Daily Tips</Text>
+                  <TouchableOpacity
+                    onPress={() => regenerateContent('daily-tips')}
+                    disabled={aiLoading}
+                    style={styles.refreshButton}
+                  >
+                    <RefreshCw size={16} color="#6b7280" />
+                    <Text style={styles.refreshText}>New Tips</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {dailyTips.map((tip) => {
+                  const Icon = getIconForCategory(tip.category);
+                  const tipId = `tip-${tip.id}`;
+                  return (
+                    <View key={tip.id} style={styles.tipCard}>
+                      <View style={styles.tipHeader}>
+                        <View style={styles.tipLeft}>
+                          <View style={styles.tipIconContainer}>
+                            <Icon size={16} color="#22c55e" />
+                          </View>
+                          <View>
+                            <Text style={styles.tipTitle}>{tip.title}</Text>
+                            <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyBgColor(tip.difficulty) }]}>
+                              <Text style={[styles.difficultyText, { color: getDifficultyColor(tip.difficulty) }]}>
+                                {tip.difficulty}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleAudioPlay(`${tip.title}. ${tip.content}`, tipId)}
+                          style={[styles.audioButton, isPlaying(tipId) && styles.playingButton]}
+                          disabled={ttsLoading}
+                        >
+                          <Volume2 size={16} color={isPlaying(tipId) ? "#22c55e" : "#6b7280"} />
+                        </TouchableOpacity>
+                      </View>
+                      
+                      <Text style={styles.tipContent}>
+                        {tip.content}
+                      </Text>
+                      
+                      <TouchableOpacity
+                        style={styles.learnMoreButton}
+                        onPress={() => setSelectedTip(selectedTip === tip.id ? null : tip.id)}
+                      >
+                        <BookOpen size={16} color="#22c55e" />
+                        <Text style={styles.learnMoreText}>
+                          {selectedTip === tip.id ? "Show Less" : "Learn More"}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {activeTab === 'crops' && (
+              <View style={styles.tabContent}>
+                <View style={styles.tabHeader}>
+                  <Text style={styles.tabTitle}>AI-Generated Crop Guides</Text>
+                  <TouchableOpacity
+                    onPress={() => regenerateContent('crop-guides')}
+                    disabled={aiLoading}
+                    style={styles.refreshButton}
+                  >
+                    <RefreshCw size={16} color="#6b7280" />
+                    <Text style={styles.refreshText}>New Guides</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {cropGuides.map((crop, index) => {
+                  const guideId = `guide-${index}`;
+                  return (
+                    <View key={index} style={styles.cropCard}>
+                      <View style={styles.cropHeader}>
+                        <View style={styles.cropLeft}>
+                          <View style={styles.cropIconContainer}>
+                            {crop.icon === 'cherry' ? <Cherry size={24} color="#22c55e" /> :
+                             crop.icon === 'wheat' ? <Wheat size={24} color="#22c55e" /> :
+                             crop.icon === 'carrot' ? <Carrot size={24} color="#22c55e" /> :
+                             <Leaf size={24} color="#22c55e" />}
+                          </View>
+                          <Text style={styles.cropName}>{crop.name}</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleAudioPlay(`${crop.name} guide. Common issues: ${crop.commonIssues.join(', ')}. Tips: ${crop.tips}`, guideId)}
+                          style={[styles.audioButton, isPlaying(guideId) && styles.playingButton]}
+                          disabled={ttsLoading}
+                        >
+                          <Volume2 size={16} color={isPlaying(guideId) ? "#22c55e" : "#6b7280"} />
+                        </TouchableOpacity>
+                      </View>
+                      
+                      <View style={styles.cropDetails}>
+                        <View style={styles.cropSection}>
+                          <Text style={styles.cropSectionTitle}>Common Issues:</Text>
+                          <View style={styles.issuesList}>
+                            {crop.commonIssues.map((issue, i) => (
+                              <View key={i} style={styles.issueBadge}>
+                                <Text style={styles.issueText}>{issue}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                        
+                        <View style={styles.cropSection}>
+                          <Text style={styles.cropSectionTitle}>Key Tips:</Text>
+                          <Text style={styles.cropTips}>{crop.tips}</Text>
+                        </View>
+
+                        <TouchableOpacity
+                          style={styles.learnMoreButton}
+                          onPress={() => setSelectedGuide(selectedGuide === index ? null : index)}
+                        >
+                          <BookOpen size={16} color="#22c55e" />
+                          <Text style={styles.learnMoreText}>
+                            {selectedGuide === index ? "Show Less" : "Learn More"}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
+            {activeTab === 'guides' && (
+              <View style={styles.tabContent}>
+                <View style={styles.tabHeader}>
+                  <Text style={styles.tabTitle}>AI-Generated How-To Guides</Text>
+                  <TouchableOpacity
+                    onPress={() => regenerateContent('how-to-guides', 4)}
+                    disabled={aiLoading}
+                    style={styles.refreshButton}
+                  >
+                    <RefreshCw size={16} color="#6b7280" />
+                    <Text style={styles.refreshText}>New Guides</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {howToGuides.map((guide, index) => {
+                  const howToId = `howto-${index}`;
+                  const fullText = `${guide.title}. This ${guide.difficulty} level guide takes ${guide.estimatedTime}. Tools needed: ${guide.tools.join(', ')}. Steps: ${guide.steps.join('. ')}`;
                   
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Common Issues:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {crop.commonIssues.map((issue, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">
-                            {issue}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Key Tips:</p>
-                      <p className="text-sm text-muted-foreground">{crop.tips}</p>
-                    </div>
+                  return (
+                    <View key={index} style={styles.guideCard}>
+                      <View style={styles.guideHeader}>
+                        <View style={styles.guideLeft}>
+                          <BookOpen size={20} color="#22c55e" />
+                          <Text style={styles.guideTitle}>{guide.title}</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleAudioPlay(fullText, howToId)}
+                          style={[styles.audioButton, isPlaying(howToId) && styles.playingButton]}
+                          disabled={ttsLoading}
+                        >
+                          <Volume2 size={16} color={isPlaying(howToId) ? "#22c55e" : "#6b7280"} />
+                        </TouchableOpacity>
+                      </View>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedGuide(selectedGuide === index ? null : index)}
-                    >
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      {selectedGuide === index ? "Show Less" : "Learn More"}
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </TabsContent>
+                      <View style={styles.guideBadges}>
+                        <View style={[styles.difficultyBadge, { backgroundColor: getDifficultyBgColor(guide.difficulty) }]}>
+                          <Text style={[styles.difficultyText, { color: getDifficultyColor(guide.difficulty) }]}>
+                            {guide.difficulty}
+                          </Text>
+                        </View>
+                        <View style={styles.timeBadge}>
+                          <Text style={styles.timeText}>{guide.estimatedTime}</Text>
+                        </View>
+                      </View>
 
-          <TabsContent value="guides" className="space-y-4 mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">AI-Generated How-To Guides</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => regenerateContent('how-to-guides', 4)}
-                disabled={aiLoading}
-              >
-                {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                New Guides
-              </Button>
-            </div>
-            
-            {howToGuides.map((guide, index) => {
-              const howToId = `howto-${index}`;
-              const fullText = `${guide.title}. This ${guide.difficulty} level guide takes ${guide.estimatedTime}. Tools needed: ${guide.tools.join(', ')}. Steps: ${guide.steps.join('. ')}`;
-              
-              return (
-                <Card key={index} className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        <h4 className="font-semibold">{guide.title}</h4>
-                      </div>
-                      <div className="flex items-center space-x-2 mb-3">
-                        <Badge className={getDifficultyColor(guide.difficulty)}>
-                          {guide.difficulty}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {guide.estimatedTime}
-                        </Badge>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleAudioPlay(fullText, howToId)}
-                      className={isPlaying(howToId) ? "text-primary" : ""}
-                      disabled={ttsLoading}
-                    >
-                      {ttsLoading && isPlaying(howToId) ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Volume2 className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
+                      <View style={styles.guideDetails}>
+                        <View style={styles.guideSection}>
+                          <Text style={styles.guideSectionTitle}>Tools Required:</Text>
+                          <View style={styles.toolsList}>
+                            {guide.tools.map((tool, i) => (
+                              <View key={i} style={styles.toolBadge}>
+                                <Text style={styles.toolText}>{tool}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
 
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Tools Required:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {guide.tools.map((tool, i) => (
-                          <Badge key={i} variant="outline" className="text-xs">
-                            {tool}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+                        <View style={styles.guideSection}>
+                          <Text style={styles.guideSectionTitle}>Steps:</Text>
+                          <View style={styles.stepsList}>
+                            {guide.steps.map((step, i) => (
+                              <View key={i} style={styles.stepItem}>
+                                <Text style={styles.stepNumber}>{i + 1}.</Text>
+                                <Text style={styles.stepText}>{step}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+          </View>
 
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Steps:</p>
-                      <ol className="list-decimal list-inside space-y-1">
-                        {guide.steps.map((step, i) => (
-                          <li key={i} className="text-sm text-muted-foreground">
-                            {step}
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </TabsContent>
-        </Tabs>
-
-        {/* Voice Features Info */}
-        <Card className="p-4 bg-gradient-to-r from-accent/5 to-primary/5 border-accent/20">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center space-x-3">
-              <Volume2 className="h-5 w-5 text-accent" />
-              <div>
-                <p className="font-semibold text-sm">Voice Reading</p>
-                <p className="text-xs text-muted-foreground">
-                  Tap speaker icons to hear content
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Mic className="h-5 w-5 text-primary" />
-              <div>
-                <p className="font-semibold text-sm">Voice Assistant</p>
-                <p className="text-xs text-muted-foreground">
-                  Ask questions or describe issues
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </PageLayout>
+          {/* Voice Features Info */}
+          <View style={styles.featuresCard}>
+            <View style={styles.featuresGrid}>
+              <View style={styles.featureItem}>
+                <Volume2 size={20} color="#06b6d4" />
+                <View style={styles.featureText}>
+                  <Text style={styles.featureTitle}>Voice Reading</Text>
+                  <Text style={styles.featureDescription}>
+                    Tap speaker icons to hear content
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.featureItem}>
+                <Mic size={20} color="#22c55e" />
+                <View style={styles.featureText}>
+                  <Text style={styles.featureTitle}>Voice Assistant</Text>
+                  <Text style={styles.featureDescription}>
+                    Ask questions or describe issues
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingTop: 20,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  voiceCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  voiceContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  voiceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  voiceIcon: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#dcfce7',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  voiceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+  voiceSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  voiceButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recordingButton: {
+    backgroundColor: '#ef4444',
+  },
+  idleButton: {
+    backgroundColor: '#22c55e',
+  },
+  voiceButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+  },
+  alertsSection: {
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginLeft: 8,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  refreshText: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  alertCard: {
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  highUrgencyCard: {
+    backgroundColor: '#fef2f2',
+    borderColor: '#fecaca',
+  },
+  mediumUrgencyCard: {
+    backgroundColor: '#fffbeb',
+    borderColor: '#fde68a',
+  },
+  alertContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  alertText: {
+    flex: 1,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  alertMessage: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  audioButton: {
+    padding: 8,
+    borderRadius: 6,
+  },
+  playingButton: {
+    backgroundColor: '#dcfce7',
+  },
+  tabContainer: {
+    marginBottom: 24,
+  },
+  tabList: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 24,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
+  },
+  activeTabText: {
+    color: '#1f2937',
+  },
+  tabContent: {
+    marginTop: 8,
+  },
+  tabHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  tabTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  tipCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tipHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  tipLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  tipIconContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#dcfce7',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  tipTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  difficultyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  difficultyText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tipContent: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignSelf: 'flex-start',
+  },
+  learnMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginLeft: 8,
+  },
+  cropCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cropHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  cropLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  cropIconContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#dcfce7',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  cropName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  cropDetails: {
+    marginTop: 8,
+  },
+  cropSection: {
+    marginBottom: 12,
+  },
+  cropSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  issuesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  issueBadge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  issueText: {
+    fontSize: 12,
+    color: '#1f2937',
+  },
+  cropTips: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+  },
+  guideCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  guideHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  guideLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  guideTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginLeft: 8,
+  },
+  guideBadges: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  timeBadge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginLeft: 8,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#1f2937',
+  },
+  guideDetails: {
+    marginTop: 8,
+  },
+  guideSection: {
+    marginBottom: 12,
+  },
+  guideSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  toolsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  toolBadge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  toolText: {
+    fontSize: 12,
+    color: '#1f2937',
+  },
+  stepsList: {
+    marginTop: 4,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  stepNumber: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginRight: 8,
+    minWidth: 20,
+  },
+  stepText: {
+    fontSize: 14,
+    color: '#6b7280',
+    flex: 1,
+    lineHeight: 20,
+  },
+  featuresCard: {
+    backgroundColor: '#f0fdfa',
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  featuresGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  featureText: {
+    marginLeft: 12,
+  },
+  featureTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 2,
+  },
+  featureDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+});
