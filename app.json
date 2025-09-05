@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,18 +16,29 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.agroeng.farmhealthmate"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#22c55e"
-      }
+      },
+      "package": "com.agroeng.farmhealthmate"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "scheme": "farm-health-mate"
+    "scheme": "farm-health-mate",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Farm Health Mate to access your camera to take photos of plants for diagnosis."
+        }
+      ]
+    ]
   }
 }
