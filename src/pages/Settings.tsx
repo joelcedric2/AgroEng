@@ -310,8 +310,7 @@ export default function Settings({ navigation }: SettingsProps) {
           label: t('settings.downloadCache'),
           description: `${t('settings.downloadCacheDesc')} (${cacheSize})`,
           action: handleDownloadCache,
-          showArrow: false,
-          action: handleDownloadCache
+          showArrow: false
         }
       ]
     },
@@ -504,3 +503,4 @@ export default function Settings({ navigation }: SettingsProps) {
       </ScrollView>
     </SafeAreaView>
   );
+}
