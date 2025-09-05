@@ -1,20 +1,23 @@
-import { useState } from "react";
-import { PageLayout } from "@/components/ui/page-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useNavigate, useLocation } from "react-router-dom";
-import { AlertTriangle, CheckCircle, ArrowRight, BookOpen, Volume2, Users, ThumbsUp, ThumbsDown, Leaf, Brain } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Image,
+  Alert,
+} from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { AlertTriangle, CheckCircle, ArrowRight, BookOpen, Volume2, Users, ThumbsUp, ThumbsDown, Leaf, Brain } from "lucide-react-native";
 
 export default function Diagnosis() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
+  const navigation = useNavigation();
+  const route = useRoute();
   
-  // Get data from navigation state (in real app, this would come from API)
-  const { image, plant = "Tomato", issue = "Leaf Blight (Fungal)", cause } = location.state || {};
+  // Get data from navigation params
+  const { image, plant = "Tomato", issue = "Leaf Blight (Fungal)", cause } = route.params || {};
 
   // Mock healthy plant image URL
   const healthyPlantImage = "https://images.unsplash.com/photo-1592479286881-62c8a1e07a4c?w=400&h=400&fit=crop";
@@ -43,18 +46,11 @@ export default function Diagnosis() {
 
   const handleCrowdsourceSubmit = () => {
     if (!crowdsourceCrop) {
-      toast({
-        title: "Please select a crop",
-        description: "Help us improve by identifying the crop type.",
-        variant: "destructive"
-      });
+      Alert.alert("Please select a crop", "Help us improve by identifying the crop type.");
       return;
     }
     
-    toast({
-      title: "Thanks for your help!",
-      description: "Your feedback helps improve our AI accuracy.",
-    });
+    Alert.alert("Thanks for your help!", "Your feedback helps improve our AI accuracy.");
     
     // Reset form
     setCrowdsourceCrop("");
@@ -66,18 +62,12 @@ export default function Diagnosis() {
     setFeedbackGiven(true);
     
     if (isPositive) {
-      toast({
-        title: "Thank you!",
-        description: "We're glad the diagnosis was helpful.",
-      });
+      Alert.alert("Thank you!", "We're glad the diagnosis was helpful.");
     }
   };
 
   const submitFeedback = () => {
-    toast({
-      title: "Feedback received!",
-      description: "Thank you for helping us improve our service.",
-    });
+    Alert.alert("Feedback received!", "Thank you for helping us improve our service.");
     setFeedbackText("");
   };
 
@@ -87,272 +77,495 @@ export default function Diagnosis() {
     // Simulate audio playback
     setTimeout(() => {
       setIsPlaying(false);
-      toast({
-        title: "Audio explanation played",
-        description: "In a real app, this would play TTS audio in your selected language.",
-      });
+      Alert.alert("Audio explanation played", "In a real app, this would play TTS audio in your selected language.");
     }, 3000);
   };
 
   return (
-    <PageLayout title="Diagnosis Results" showNavigation={true}>
-      <div className="p-4 space-y-6">
-        {/* Results Header */}
-        <Card className="p-6 text-center bg-gradient-to-br from-primary/5 to-accent/5">
-          <h2 className="text-2xl font-bold mb-2">Here's What We Found</h2>
-          <p className="text-muted-foreground">
-            Analysis complete - here are your results
-          </p>
-        </Card>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Results Header */}
+          <View style={styles.headerCard}>
+            <Text style={styles.headerTitle}>Here's What We Found</Text>
+            <Text style={styles.headerSubtitle}>
+              Analysis complete - here are your results
+            </Text>
+          </View>
 
-        {/* Side-by-side Image Comparison */}
-        <Card className="p-4">
-          <h3 className="font-semibold mb-4 text-center">Visual Comparison</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <img 
-                src={image || '/placeholder.svg'} 
-                alt="Your plant" 
-                className="w-full aspect-square object-cover rounded-lg border-2 border-destructive/30"
-              />
-              <p className="text-sm text-center font-medium text-destructive">Your Plant</p>
-            </div>
-            <div className="space-y-2">
-              <img 
-                src={healthyPlantImage} 
-                alt="Healthy plant" 
-                className="w-full aspect-square object-cover rounded-lg border-2 border-success/30"
-              />
-              <p className="text-sm text-center font-medium text-success">Healthy Reference</p>
-            </div>
-          </div>
-        </Card>
+          {/* Side-by-side Image Comparison */}
+          <View style={styles.comparisonCard}>
+            <Text style={styles.comparisonTitle}>Visual Comparison</Text>
+            <View style={styles.imageGrid}>
+              <View style={styles.imageContainer}>
+                <Image 
+                  source={{ uri: image || 'https://via.placeholder.com/200' }}
+                  style={[styles.plantImage, styles.yourPlantImage]}
+                />
+                <Text style={styles.yourPlantLabel}>Your Plant</Text>
+              </View>
+              <View style={styles.imageContainer}>
+                <Image 
+                  source={{ uri: healthyPlantImage }}
+                  style={[styles.plantImage, styles.healthyPlantImage]}
+                />
+                <Text style={styles.healthyPlantLabel}>Healthy Reference</Text>
+              </View>
+            </View>
+          </View>
 
-        {/* Diagnosis Information */}
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Leaf className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Plant Identified</p>
-              <p className="font-semibold text-lg">{plant}</p>
-            </div>
-          </div>
+          {/* Diagnosis Information */}
+          <View style={styles.diagnosisCard}>
+            <View style={styles.diagnosisItem}>
+              <View style={styles.diagnosisIconContainer}>
+                <Leaf size={20} color="#22c55e" />
+              </View>
+              <View style={styles.diagnosisText}>
+                <Text style={styles.diagnosisLabel}>Plant Identified</Text>
+                <Text style={styles.diagnosisValue}>{plant}</Text>
+              </View>
+            </View>
 
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-destructive/10 rounded-full">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Issue Detected</p>
-              <p className="font-semibold text-lg text-destructive">{issue}</p>
-            </div>
-          </div>
+            <View style={styles.diagnosisItem}>
+              <View style={[styles.diagnosisIconContainer, styles.warningIcon]}>
+                <AlertTriangle size={16} color="#ef4444" />
+              </View>
+              <View style={styles.diagnosisText}>
+                <Text style={styles.diagnosisLabel}>Issue Detected</Text>
+                <Text style={[styles.diagnosisValue, styles.issueText]}>{issue}</Text>
+              </View>
+            </View>
 
-          {cause && (
-            <div className="flex items-start space-x-3">
-              <div className="p-2 bg-warning/10 rounded-full">
-                <Brain className="h-4 w-4 text-warning" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Likely Cause</p>
-                <p className="font-medium">{cause}</p>
-              </div>
-            </div>
-          )}
-        </Card>
+            {cause && (
+              <View style={styles.diagnosisItem}>
+                <View style={[styles.diagnosisIconContainer, styles.causeIcon]}>
+                  <Brain size={16} color="#f59e0b" />
+                </View>
+                <View style={styles.diagnosisText}>
+                  <Text style={styles.diagnosisLabel}>Likely Cause</Text>
+                  <Text style={styles.diagnosisValue}>{cause}</Text>
+                </View>
+              </View>
+            )}
+          </View>
 
-        {/* Severity Indicator */}
-        <Card className="p-4 bg-warning/5 border-warning/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-warning/20 rounded-full">
-                <AlertTriangle className="h-4 w-4 text-warning" />
-              </div>
-              <div>
-                <p className="font-semibold text-warning">Moderate Severity</p>
-                <p className="text-sm text-muted-foreground">Action needed within 1-2 days</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-warning">7/10</div>
-              <div className="text-xs text-muted-foreground">Urgency</div>
-            </div>
-          </div>
-        </Card>
+          {/* Severity Indicator */}
+          <View style={styles.severityCard}>
+            <View style={styles.severityContent}>
+              <View style={styles.severityLeft}>
+                <View style={styles.severityIconContainer}>
+                  <AlertTriangle size={16} color="#f59e0b" />
+                </View>
+                <View>
+                  <Text style={styles.severityTitle}>Moderate Severity</Text>
+                  <Text style={styles.severitySubtitle}>Action needed within 1-2 days</Text>
+                </View>
+              </View>
+              <View style={styles.severityRight}>
+                <Text style={styles.severityScore}>7/10</Text>
+                <Text style={styles.severityLabel}>Urgency</Text>
+              </View>
+            </View>
+          </View>
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button 
-            size="lg" 
-            className="w-full h-14 text-lg font-semibold"
-            onClick={() => navigate('/solutions', { 
-              state: { plant, issue, cause, image }
-            })}
-          >
-            <ArrowRight className="mr-2 h-6 w-6" />
-            View Treatment Solutions
-          </Button>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/camera')}
-              className="h-12"
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('Solutions', { 
+                plant, issue, cause, image 
+              })}
             >
-              Scan Another Plant
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/tips')}
-              className="h-12"
-            >
-              <BookOpen className="mr-2 h-4 w-4" />
-              Learn More
-            </Button>
-          </div>
-        </div>
-
-        {/* Audio Explanation */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Volume2 className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Audio Explanation</p>
-                <p className="text-sm text-muted-foreground">
-                  Listen to diagnosis in your language
-                </p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={playAudioExplanation}
-              disabled={isPlaying}
-            >
-              <Volume2 className="h-4 w-4 mr-2" />
-              {isPlaying ? "Playing..." : "Listen"}
-            </Button>
-          </div>
-        </Card>
-
-        {/* Crowdsourcing Section */}
-        <Card className="p-6 bg-gradient-to-br from-accent/5 to-primary/5">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-accent/10 rounded-full">
-              <Users className="h-5 w-5 text-accent" />
-            </div>
-            <h3 className="text-lg font-semibold">Help Improve AgroEng AI</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                What crop is this? *
-              </label>
-              <Select value={crowdsourceCrop} onValueChange={setCrowdsourceCrop}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select crop type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {crops.map((crop) => (
-                    <SelectItem key={crop} value={crop.toLowerCase()}>
-                      {crop}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <ArrowRight size={24} color="#ffffff" />
+              <Text style={styles.primaryButtonText}>View Treatment Solutions</Text>
+            </TouchableOpacity>
             
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                What problem do you see? (Optional)
-              </label>
-              <Select value={crowdsourceProblem} onValueChange={setCrowdsourceProblem}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select or describe the problem" />
-                </SelectTrigger>
-                <SelectContent>
-                  {commonProblems.map((problem) => (
-                    <SelectItem key={problem} value={problem.toLowerCase()}>
-                      {problem}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Button 
-              onClick={handleCrowdsourceSubmit}
-              className="w-full"
-              variant="outline"
-            >
-              Submit Feedback
-            </Button>
-          </div>
-        </Card>
-
-        {/* Feedback Loop */}
-        {!feedbackGiven && (
-          <Card className="p-6 bg-gradient-to-br from-success/5 to-primary/5">
-            <h3 className="font-semibold mb-4 text-center">Did the diagnosis help you?</h3>
-            <div className="flex gap-3">
-              <Button 
-                className="flex-1 h-12"
-                onClick={() => handleFeedback(true)}
+            <View style={styles.secondaryButtons}>
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={() => navigation.navigate('Camera')}
               >
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                Yes
-              </Button>
-              <Button 
-                variant="outline"
-                className="flex-1 h-12"
-                onClick={() => handleFeedback(false)}
+                <Text style={styles.secondaryButtonText}>Scan Another Plant</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={() => navigation.navigate('Tips')}
               >
-                <ThumbsDown className="mr-2 h-4 w-4" />
-                No
-              </Button>
-            </div>
-          </Card>
-        )}
+                <BookOpen size={16} color="#6b7280" />
+                <Text style={styles.secondaryButtonText}>Learn More</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {feedbackGiven && feedbackPositive === false && (
-          <Card className="p-4">
-            <h4 className="font-medium mb-3">Tell us what went wrong (optional)</h4>
-            <div className="space-y-3">
-              <Input
-                placeholder="What could we improve?"
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-              />
-              <Button 
-                onClick={submitFeedback}
-                size="sm"
-                className="w-full"
+          {/* Audio Explanation */}
+          <View style={styles.audioCard}>
+            <View style={styles.audioContent}>
+              <View style={styles.audioLeft}>
+                <View style={styles.audioIconContainer}>
+                  <Volume2 size={16} color="#22c55e" />
+                </View>
+                <View>
+                  <Text style={styles.audioTitle}>Audio Explanation</Text>
+                  <Text style={styles.audioSubtitle}>
+                    Listen to diagnosis in your language
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.audioButton}
+                onPress={playAudioExplanation}
+                disabled={isPlaying}
               >
-                Submit Feedback
-              </Button>
-            </div>
-          </Card>
-        )}
+                <Volume2 size={16} color="#22c55e" />
+                <Text style={styles.audioButtonText}>
+                  {isPlaying ? "Playing..." : "Listen"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Accuracy Note */}
-        <Card className="p-4 bg-muted/30">
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="h-5 w-5 text-success" />
-            <div>
-              <p className="text-sm font-medium">AI Confidence: 94%</p>
-              <p className="text-xs text-muted-foreground">
-                This diagnosis is based on visual analysis. For severe cases, consult a local agricultural expert.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </PageLayout>
+          {/* Accuracy Note */}
+          <View style={styles.accuracyCard}>
+            <View style={styles.accuracyContent}>
+              <CheckCircle size={20} color="#22c55e" />
+              <View style={styles.accuracyText}>
+                <Text style={styles.accuracyTitle}>AI Confidence: 94%</Text>
+                <Text style={styles.accuracySubtitle}>
+                  This diagnosis is based on visual analysis. For severe cases, consult a local agricultural expert.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  headerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  comparisonCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  comparisonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  imageContainer: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 8,
+  },
+  plantImage: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  yourPlantImage: {
+    borderWidth: 2,
+    borderColor: '#ef4444',
+  },
+  healthyPlantImage: {
+    borderWidth: 2,
+    borderColor: '#22c55e',
+  },
+  yourPlantLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#ef4444',
+    textAlign: 'center',
+  },
+  healthyPlantLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#22c55e',
+    textAlign: 'center',
+  },
+  diagnosisCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  diagnosisItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  diagnosisIconContainer: {
+    width: 36,
+    height: 36,
+    backgroundColor: '#dcfce7',
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  warningIcon: {
+    backgroundColor: '#fef2f2',
+  },
+  causeIcon: {
+    backgroundColor: '#fef3c7',
+  },
+  diagnosisText: {
+    flex: 1,
+  },
+  diagnosisLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  diagnosisValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  issueText: {
+    color: '#ef4444',
+  },
+  severityCard: {
+    backgroundColor: '#fffbeb',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#fbbf24',
+  },
+  severityContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  severityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  severityIconContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#fbbf24',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  severityTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#f59e0b',
+    marginBottom: 4,
+  },
+  severitySubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  severityRight: {
+    alignItems: 'center',
+  },
+  severityScore: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#f59e0b',
+  },
+  severityLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+  },
+  actionButtons: {
+    marginBottom: 24,
+  },
+  primaryButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  primaryButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginLeft: 8,
+  },
+  secondaryButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  secondaryButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flex: 1,
+    marginHorizontal: 4,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginLeft: 4,
+  },
+  audioCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  audioContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  audioLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  audioIconContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#dcfce7',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  audioTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  audioSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  audioButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  audioButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginLeft: 4,
+  },
+  accuracyCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  accuracyContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  accuracyText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  accuracyTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginBottom: 4,
+  },
+  accuracySubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 16,
+  },
+});

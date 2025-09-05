@@ -1,253 +1,499 @@
-import { PageLayout } from "@/components/ui/page-layout";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Clock, Calendar, ShoppingCart, CheckCircle, AlertCircle, Leaf, Sprout } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+} from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { Clock, Calendar, ShoppingCart, CheckCircle, AlertTriangle, Leaf, Sprout } from "lucide-react-native";
 
 export default function Solutions() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
+  const navigation = useNavigation();
+  const route = useRoute();
   
-  const { plant = "Tomato", issue = "Leaf Blight (Fungal)" } = location.state || {};
+  const { plant = "Tomato", issue = "Leaf Blight (Fungal)" } = route.params || {};
 
   const handleSaveSolution = () => {
-    toast({
-      title: "Solution Saved!",
-      description: "Treatment plan has been saved to your history.",
-    });
+    Alert.alert("Solution Saved!", "Treatment plan has been saved to your history.");
   };
 
   return (
-    <PageLayout title="Treatment Solutions" showNavigation={true}>
-      <div className="p-4 space-y-6">
-        {/* Header */}
-        <Card className="p-6 text-center bg-gradient-to-br from-success/10 to-primary/10">
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold">Treatment Plan</h2>
-            <p className="text-muted-foreground">{plant} - {issue}</p>
-          </div>
-        </Card>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.headerCard}>
+            <Text style={styles.headerTitle}>Treatment Plan</Text>
+            <Text style={styles.headerSubtitle}>{plant} - {issue}</Text>
+          </View>
 
-        {/* Short-term Solutions */}
-        <Card className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-warning/10 rounded-full">
-              <Clock className="h-5 w-5 text-warning" />
-            </div>
-            <h3 className="text-lg font-semibold">Immediate Actions (1-2 days)</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Remove Infected Leaves</p>
-                <p className="text-sm text-muted-foreground">
-                  Cut and dispose of all affected leaves to prevent spread. Clean tools with alcohol between cuts.
-                </p>
-              </div>
-            </div>
+          {/* Short-term Solutions */}
+          <View style={styles.solutionCard}>
+            <View style={styles.solutionHeader}>
+              <View style={styles.solutionIconContainer}>
+                <Clock size={20} color="#f59e0b" />
+              </View>
+              <Text style={styles.solutionTitle}>Immediate Actions (1-2 days)</Text>
+            </View>
             
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Apply Organic Fungicide</p>
-                <p className="text-sm text-muted-foreground">
-                  Spray with neem oil or copper-based fungicide in early morning or evening.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Improve Air Circulation</p>
-                <p className="text-sm text-muted-foreground">
-                  Space plants further apart and remove lower leaves touching the ground.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+            <View style={styles.solutionList}>
+              <View style={styles.solutionItem}>
+                <View style={styles.checkIconContainer}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Remove Infected Leaves</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Cut and dispose of all affected leaves to prevent spread. Clean tools with alcohol between cuts.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={styles.checkIconContainer}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Apply Organic Fungicide</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Spray with neem oil or copper-based fungicide in early morning or evening.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={styles.checkIconContainer}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Improve Air Circulation</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Space plants further apart and remove lower leaves touching the ground.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
 
-        {/* Long-term Solutions */}
-        <Card className="p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <h3 className="text-lg font-semibold">Prevention & Long-term Care</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-primary/20 rounded-full mt-1">
-                <Leaf className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Adjust Watering Schedule</p>
-                <p className="text-sm text-muted-foreground">
-                  Water at soil level in early morning. Avoid watering leaves directly.
-                </p>
-              </div>
-            </div>
+          {/* Long-term Solutions */}
+          <View style={styles.solutionCard}>
+            <View style={styles.solutionHeader}>
+              <View style={[styles.solutionIconContainer, styles.primaryIcon]}>
+                <Calendar size={20} color="#22c55e" />
+              </View>
+              <Text style={styles.solutionTitle}>Prevention & Long-term Care</Text>
+            </View>
             
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-primary/20 rounded-full mt-1">
-                <Leaf className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Soil Management</p>
-                <p className="text-sm text-muted-foreground">
-                  Add organic compost and ensure proper drainage to strengthen plant immunity.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-primary/20 rounded-full mt-1">
-                <Leaf className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Crop Rotation</p>
-                <p className="text-sm text-muted-foreground">
-                  Plan to rotate with non-solanaceous crops next season to break disease cycle.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+            <View style={styles.solutionList}>
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.primaryCheck]}>
+                  <Leaf size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Adjust Watering Schedule</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Water at soil level in early morning. Avoid watering leaves directly.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.primaryCheck]}>
+                  <Leaf size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Soil Management</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Add organic compost and ensure proper drainage to strengthen plant immunity.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.primaryCheck]}>
+                  <Leaf size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Crop Rotation</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Plan to rotate with non-solanaceous crops next season to break disease cycle.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
 
-        {/* Local Remedies */}
-        <Card className="p-6 bg-gradient-to-br from-success/5 to-primary/5">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-success/10 rounded-full">
-              <Sprout className="h-5 w-5 text-success" />
-            </div>
-            <h3 className="text-lg font-semibold">Local Remedies</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Neem Oil Solution</p>
-                <p className="text-sm text-muted-foreground">
-                  Mix 2 tablespoons of neem oil with 1 liter of water. Spray in early morning or evening.
-                </p>
-              </div>
-            </div>
+          {/* Local Remedies */}
+          <View style={styles.localRemediesCard}>
+            <View style={styles.solutionHeader}>
+              <View style={[styles.solutionIconContainer, styles.successIcon]}>
+                <Sprout size={20} color="#22c55e" />
+              </View>
+              <Text style={styles.solutionTitle}>Local Remedies</Text>
+            </View>
             
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Ash & Pepper Solution</p>
-                <p className="text-sm text-muted-foreground">
-                  Mix wood ash with ground pepper and water to create natural pest deterrent spray.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-start space-x-3">
-              <div className="p-1 bg-success/20 rounded-full mt-1">
-                <CheckCircle className="h-4 w-4 text-success" />
-              </div>
-              <div>
-                <p className="font-medium">Improve Plant Spacing</p>
-                <p className="text-sm text-muted-foreground">
-                  Space plants 30-45cm apart to reduce humidity and improve air circulation naturally.
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
+            <View style={styles.solutionList}>
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.successCheck]}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Neem Oil Solution</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Mix 2 tablespoons of neem oil with 1 liter of water. Spray in early morning or evening.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.successCheck]}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Ash & Pepper Solution</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Mix wood ash with ground pepper and water to create natural pest deterrent spray.
+                  </Text>
+                </View>
+              </View>
+              
+              <View style={styles.solutionItem}>
+                <View style={[styles.checkIconContainer, styles.successCheck]}>
+                  <CheckCircle size={16} color="#22c55e" />
+                </View>
+                <View style={styles.solutionText}>
+                  <Text style={styles.solutionItemTitle}>Improve Plant Spacing</Text>
+                  <Text style={styles.solutionItemDescription}>
+                    Space plants 30-45cm apart to reduce humidity and improve air circulation naturally.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
 
-        {/* Product Suggestions */}
-        <Card className="p-6 bg-gradient-to-br from-accent/5 to-success/5">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-accent/10 rounded-full">
-              <ShoppingCart className="h-5 w-5 text-accent" />
-            </div>
-            <h3 className="text-lg font-semibold">Recommended Products</h3>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-card rounded-lg border">
-              <div>
-                <p className="font-medium">Neem Oil - 100ml</p>
-                <p className="text-sm text-muted-foreground">Organic fungicide & pesticide</p>
-              </div>
-              <Button variant="outline" size="sm">
-                $8.99
-              </Button>
-            </div>
+          {/* Product Suggestions */}
+          <View style={styles.productCard}>
+            <View style={styles.solutionHeader}>
+              <View style={[styles.solutionIconContainer, styles.accentIcon]}>
+                <ShoppingCart size={20} color="#06b6d4" />
+              </View>
+              <Text style={styles.solutionTitle}>Recommended Products</Text>
+            </View>
             
-            <div className="flex items-center justify-between p-3 bg-card rounded-lg border">
-              <div>
-                <p className="font-medium">Copper Sulfate Spray</p>
-                <p className="text-sm text-muted-foreground">Preventive fungicide</p>
-              </div>
-              <Button variant="outline" size="sm">
-                $12.50
-              </Button>
-            </div>
-          </div>
-        </Card>
+            <View style={styles.productList}>
+              <View style={styles.productItem}>
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>Neem Oil - 100ml</Text>
+                  <Text style={styles.productDescription}>Organic fungicide & pesticide</Text>
+                </View>
+                <TouchableOpacity style={styles.productButton}>
+                  <Text style={styles.productPrice}>$8.99</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.productItem}>
+                <View style={styles.productInfo}>
+                  <Text style={styles.productName}>Copper Sulfate Spray</Text>
+                  <Text style={styles.productDescription}>Preventive fungicide</Text>
+                </View>
+                <TouchableOpacity style={styles.productButton}>
+                  <Text style={styles.productPrice}>$12.50</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button 
-            size="lg" 
-            className="w-full h-14 text-lg font-semibold"
-            onClick={handleSaveSolution}
-          >
-            <CheckCircle className="mr-2 h-6 w-6" />
-            Save Treatment Plan
-          </Button>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/camera')}
-              className="h-12"
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity 
+              style={styles.saveButton}
+              onPress={handleSaveSolution}
             >
-              Scan Another Plant
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/history')}
-              className="h-12"
-            >
-              View History
-            </Button>
-          </div>
-        </div>
+              <CheckCircle size={24} color="#ffffff" />
+              <Text style={styles.saveButtonText}>Save Treatment Plan</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.secondaryButtons}>
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={() => navigation.navigate('Camera')}
+              >
+                <Text style={styles.secondaryButtonText}>Scan Another Plant</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={() => navigation.navigate('History')}
+              >
+                <Text style={styles.secondaryButtonText}>View History</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
-        {/* Progress Tracking */}
-        <Card className="p-4 bg-muted/30">
-          <div className="flex items-center space-x-3">
-            <AlertCircle className="h-5 w-5 text-warning" />
-            <div>
-              <p className="text-sm font-medium">Treatment Progress</p>
-              <p className="text-xs text-muted-foreground">
-                Check your plant in 3-5 days. Take another photo to track improvement.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-    </PageLayout>
+          {/* Progress Tracking */}
+          <View style={styles.progressCard}>
+            <View style={styles.progressContent}>
+              <AlertTriangle size={20} color="#f59e0b" />
+              <View style={styles.progressText}>
+                <Text style={styles.progressTitle}>Treatment Progress</Text>
+                <Text style={styles.progressSubtitle}>
+                  Check your plant in 3-5 days. Take another photo to track improvement.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  headerCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  solutionCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  localRemediesCard: {
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#bbf7d0',
+  },
+  productCard: {
+    backgroundColor: '#f0fdfa',
+    borderRadius: 12,
+    padding: 24,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  solutionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  solutionIconContainer: {
+    width: 32,
+    height: 32,
+    backgroundColor: '#fef3c7',
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  primaryIcon: {
+    backgroundColor: '#dcfce7',
+  },
+  successIcon: {
+    backgroundColor: '#dcfce7',
+  },
+  accentIcon: {
+    backgroundColor: '#cffafe',
+  },
+  solutionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  solutionList: {
+    marginTop: 8,
+  },
+  solutionItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  checkIconContainer: {
+    width: 24,
+    height: 24,
+    backgroundColor: '#dcfce7',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  primaryCheck: {
+    backgroundColor: '#dcfce7',
+  },
+  successCheck: {
+    backgroundColor: '#dcfce7',
+  },
+  solutionText: {
+    flex: 1,
+  },
+  solutionItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  solutionItemDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 16,
+  },
+  productList: {
+    marginTop: 8,
+  },
+  productItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  productInfo: {
+    flex: 1,
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  productDescription: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  productButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  productPrice: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  actionButtons: {
+    marginBottom: 24,
+  },
+  saveButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    marginLeft: 8,
+  },
+  secondaryButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  secondaryButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flex: 1,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  progressCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  progressContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  progressTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  progressSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
+    lineHeight: 16,
+  },
+});
