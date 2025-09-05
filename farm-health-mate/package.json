@@ -1,0 +1,13 @@
+@@ .. @@
+   "main": "expo-router/entry",
+   "version": "1.0.0",
+   "scripts": {
+-    "start": "expo start",
++    "start": "expo start --clear",
+     "android": "expo start --android",
+     "ios": "expo start --ios",
+     "web": "expo start --web",
+-    "test": "jest --watchAll"
++    "test": "jest --watchAll",
++    "reset": "expo start --clear"
+   },
