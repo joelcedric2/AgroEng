@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  TextInput,
+  Alert,
+} from 'react-native';
 import { 
   Users, 
   Activity, 
@@ -24,12 +29,14 @@ import {
   Download,
   BarChart3,
   PieChart
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+} from 'lucide-react-native';
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  navigation?: any;
+}
+
+export default function AdminDashboard({ navigation }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
-  const { toast } = useToast();
 
   // Mock data - replace with real data from your backend
   const dashboardMetrics = {
@@ -41,398 +48,450 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Badge variant="outline" className="text-primary">
-          AgroEng AI Management
-        </Badge>
-      </div>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Admin Dashboard</Text>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>AgroEng AI Management</Text>
+        </View>
+      </View>
+      
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Tab Navigation */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScrollView}>
+            <View style={styles.tabsList}>
+              {[
+                { key: 'overview', icon: BarChart3, label: 'Overview' },
+                { key: 'crops', icon: Database, label: 'Crops' },
+                { key: 'diseases', icon: Bug, label: 'Diseases' },
+                { key: 'users', icon: Users, label: 'Users' },
+                { key: 'feedback', icon: MessageSquare, label: 'Feedback' },
+                { key: 'billing', icon: CreditCard, label: 'Billing' },
+                { key: 'audio', icon: Volume2, label: 'Audio' },
+                { key: 'training', icon: Brain, label: 'AI Training' },
+                { key: 'settings', icon: Settings, label: 'Settings' },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[styles.tab, activeTab === tab.key && styles.activeTab]}
+                    onPress={() => setActiveTab(tab.key)}
+                  >
+                    <Icon size={16} color={activeTab === tab.key ? "#22c55e" : "#6b7280"} />
+                    <Text style={[styles.tabText, activeTab === tab.key && styles.activeTabText]}>
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10 gap-1 h-auto p-1">
-          <TabsTrigger value="overview" className="flex flex-col items-center gap-1 p-2">
-            <BarChart3 className="h-4 w-4" />
-            <span className="text-xs">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="crops" className="flex flex-col items-center gap-1 p-2">
-            <Database className="h-4 w-4" />
-            <span className="text-xs">Crops</span>
-          </TabsTrigger>
-          <TabsTrigger value="diseases" className="flex flex-col items-center gap-1 p-2">
-            <Bug className="h-4 w-4" />
-            <span className="text-xs">Diseases</span>
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex flex-col items-center gap-1 p-2">
-            <Users className="h-4 w-4" />
-            <span className="text-xs">Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="feedback" className="flex flex-col items-center gap-1 p-2">
-            <MessageSquare className="h-4 w-4" />
-            <span className="text-xs">Feedback</span>
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="flex flex-col items-center gap-1 p-2">
-            <CreditCard className="h-4 w-4" />
-            <span className="text-xs">Billing</span>
-          </TabsTrigger>
-          <TabsTrigger value="audio" className="flex flex-col items-center gap-1 p-2">
-            <Volume2 className="h-4 w-4" />
-            <span className="text-xs">Audio</span>
-          </TabsTrigger>
-          <TabsTrigger value="training" className="flex flex-col items-center gap-1 p-2">
-            <Brain className="h-4 w-4" />
-            <span className="text-xs">AI Training</span>
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex flex-col items-center gap-1 p-2">
-            <Settings className="h-4 w-4" />
-            <span className="text-xs">Settings</span>
-          </TabsTrigger>
-        </TabsList>
+          {/* Tab Content */}
+          {activeTab === 'overview' && (
+            <View style={styles.tabContent}>
+              <View style={styles.metricsGrid}>
+                <View style={styles.metricCard}>
+                  <View style={styles.metricContent}>
+                    <Users size={32} color="#22c55e" />
+                    <View style={styles.metricText}>
+                      <Text style={styles.metricLabel}>Total Users</Text>
+                      <Text style={styles.metricValue}>{dashboardMetrics.totalUsers.toLocaleString()}</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.metricCard}>
+                  <View style={styles.metricContent}>
+                    <Activity size={32} color="#22c55e" />
+                    <View style={styles.metricText}>
+                      <Text style={styles.metricLabel}>Monthly Active</Text>
+                      <Text style={styles.metricValue}>{dashboardMetrics.activeMonthlyUsers.toLocaleString()}</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.metricCard}>
+                  <View style={styles.metricContent}>
+                    <Scan size={32} color="#3b82f6" />
+                    <View style={styles.metricText}>
+                      <Text style={styles.metricLabel}>Daily Scans</Text>
+                      <Text style={styles.metricValue}>{dashboardMetrics.dailyScans}</Text>
+                    </View>
+                  </View>
+                </View>
+                <View style={styles.metricCard}>
+                  <View style={styles.metricContent}>
+                    <TrendingUp size={32} color="#f59e0b" />
+                    <View style={styles.metricText}>
+                      <Text style={styles.metricLabel}>AI Success Rate</Text>
+                      <Text style={styles.metricValue}>{dashboardMetrics.aiSuccessRate}%</Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
 
-        {/* 1. Dashboard Overview */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-6">
-              <div className="flex items-center space-x-2">
-                <Users className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold">{dashboardMetrics.totalUsers.toLocaleString()}</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center space-x-2">
-                <Activity className="h-8 w-8 text-green-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Monthly Active</p>
-                  <p className="text-2xl font-bold">{dashboardMetrics.activeMonthlyUsers.toLocaleString()}</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center space-x-2">
-                <Scan className="h-8 w-8 text-blue-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Daily Scans</p>
-                  <p className="text-2xl font-bold">{dashboardMetrics.dailyScans}</p>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-8 w-8 text-orange-500" />
-                <div>
-                  <p className="text-sm text-muted-foreground">AI Success Rate</p>
-                  <p className="text-2xl font-bold">{dashboardMetrics.aiSuccessRate}%</p>
-                </div>
-              </div>
-            </Card>
-          </div>
+              <View style={styles.topCropsCard}>
+                <Text style={styles.cardTitle}>Top 5 Crops Scanned</Text>
+                <View style={styles.cropsList}>
+                  {dashboardMetrics.topCrops.map((crop, index) => (
+                    <View key={crop} style={styles.cropItem}>
+                      <Text style={styles.cropRank}>{index + 1}. {crop}</Text>
+                      <View style={styles.cropBadge}>
+                        <Text style={styles.cropBadgeText}>{Math.floor(Math.random() * 100 + 50)} scans</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            </View>
+          )}
 
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Top 5 Crops Scanned</h3>
-            <div className="space-y-2">
-              {dashboardMetrics.topCrops.map((crop, index) => (
-                <div key={crop} className="flex items-center justify-between">
-                  <span>{index + 1}. {crop}</span>
-                  <Badge variant="secondary">{Math.floor(Math.random() * 100 + 50)} scans</Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
+          {activeTab === 'crops' && (
+            <View style={styles.tabContent}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Crop Database Management</Text>
+                <View style={styles.headerButtons}>
+                  <TouchableOpacity style={styles.primaryButton}>
+                    <Plus size={16} color="#ffffff" />
+                    <Text style={styles.primaryButtonText}>Add Crop</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.secondaryButton}>
+                    <Upload size={16} color="#22c55e" />
+                    <Text style={styles.secondaryButtonText}>Bulk Upload</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              <View style={styles.searchContainer}>
+                <Search size={16} color="#6b7280" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search crops..."
+                  placeholderTextColor="#6b7280"
+                />
+              </View>
 
-        {/* 2. Crop Database Management */}
-        <TabsContent value="crops" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Crop Database Management</h2>
-            <div className="flex gap-2">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Crop
-              </Button>
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Bulk Upload
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Search className="h-4 w-4" />
-            <Input placeholder="Search crops..." className="max-w-sm" />
-          </div>
-
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <View style={styles.cropsGrid}>
                 {['Cassava', 'Maize', 'Rice', 'Yam', 'Beans', 'Cocoa'].map((crop) => (
-                  <Card key={crop} className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{crop}</h4>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Scientific name: Manihot esculenta</p>
-                    <Badge variant="secondary" className="mt-2">5 diseases tracked</Badge>
-                  </Card>
+                  <View key={crop} style={styles.cropCard}>
+                    <View style={styles.cropCardHeader}>
+                      <Text style={styles.cropName}>{crop}</Text>
+                      <View style={styles.cropActions}>
+                        <TouchableOpacity style={styles.actionButton}>
+                          <Edit size={16} color="#6b7280" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.actionButton}>
+                          <Trash2 size={16} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <Text style={styles.cropScientific}>Scientific name: Manihot esculenta</Text>
+                    <View style={styles.diseasesBadge}>
+                      <Text style={styles.diseasesBadgeText}>5 diseases tracked</Text>
+                    </View>
+                  </View>
                 ))}
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
+              </View>
+            </View>
+          )}
 
-        {/* 3. Disease Management */}
-        <TabsContent value="diseases" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Disease & Diagnosis Management</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Disease
-            </Button>
-          </div>
-
-          <Card className="p-6">
-            <div className="space-y-4">
-              {['Cassava Mosaic Disease', 'Maize Streak Virus', 'Rice Blast', 'Yam Anthracnose'].map((disease) => (
-                <div key={disease} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{disease}</h4>
-                    <p className="text-sm text-muted-foreground">Affects multiple crops</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="outline">Viral</Badge>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* 4. User Management */}
-        <TabsContent value="users" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">User Management</h2>
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4" />
-              <Input placeholder="Search users..." className="max-w-sm" />
-            </div>
-          </div>
-
-          <Card className="p-6">
-            <div className="space-y-4">
-              {[
-                { name: 'John Farmer', email: 'john@example.com', scans: 45, region: 'Northern Nigeria' },
-                { name: 'Mary Agric', email: 'mary@example.com', scans: 32, region: 'Southern Ghana' },
-                { name: 'Ahmed Hassan', email: 'ahmed@example.com', scans: 67, region: 'Central Mali' }
-              ].map((user) => (
-                <div key={user.email} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{user.name}</h4>
-                    <p className="text-sm text-muted-foreground">{user.email} • {user.region}</p>
-                    <p className="text-sm">{user.scans} scans completed</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">Active</Badge>
-                    <Button size="sm" variant="outline">Manage</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* 5. Feedback & Crowdsourcing */}
-        <TabsContent value="feedback" className="space-y-6">
-          <h2 className="text-2xl font-bold">Feedback & Crowdsourcing Review</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Pending Reviews</h3>
-              <p className="text-2xl font-bold">127</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Positive Feedback</h3>
-              <p className="text-2xl font-bold text-green-600">89%</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Flagged Content</h3>
-              <p className="text-2xl font-bold text-red-600">23</p>
-            </Card>
-          </div>
-
-          <Card className="p-6">
-            <div className="space-y-4">
-              {[
-                { crop: 'Cassava', confidence: 92, feedback: 'Helpful', region: 'Nigeria' },
-                { crop: 'Maize', confidence: 78, feedback: 'Not helpful', region: 'Ghana' },
-                { crop: 'Rice', confidence: 95, feedback: 'Very helpful', region: 'Mali' }
-              ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{item.crop} diagnosis</h4>
-                    <p className="text-sm text-muted-foreground">{item.region} • {item.confidence}% confidence</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Badge variant={item.feedback === 'Helpful' || item.feedback === 'Very helpful' ? 'default' : 'destructive'}>
-                      {item.feedback}
-                    </Badge>
-                    <Button size="sm" variant="outline">Review</Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* 6. Premium & Billing */}
-        <TabsContent value="billing" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Premium & Billing Management</h2>
-            <Button>
-              <Download className="h-4 w-4 mr-2" />
-              Export Subscribers
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Active Subscribers</h3>
-              <p className="text-2xl font-bold">342</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Monthly Revenue</h3>
-              <p className="text-2xl font-bold">$2,850</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Churn Rate</h3>
-              <p className="text-2xl font-bold">8.5%</p>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* 7. Audio & Language */}
-        <TabsContent value="audio" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Audio & Language Management</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Upload Audio
-            </Button>
-          </div>
-
-          <Card className="p-6">
-            <div className="space-y-4">
-              {[
-                { crop: 'Cassava', disease: 'Mosaic Disease', language: 'English', duration: '1:23' },
-                { crop: 'Cassava', disease: 'Mosaic Disease', language: 'Hausa', duration: '1:18' },
-                { crop: 'Maize', disease: 'Streak Virus', language: 'French', duration: '1:45' }
-              ].map((audio, index) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{audio.crop} - {audio.disease}</h4>
-                    <p className="text-sm text-muted-foreground">{audio.language} • {audio.duration}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline">Play</Button>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
-
-        {/* 8. AI Training Data */}
-        <TabsContent value="training" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">AI Training Data Manager</h2>
-            <div className="flex gap-2">
-              <Button variant="outline">
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Dataset
-              </Button>
-              <Button>
-                <Download className="h-4 w-4 mr-2" />
-                Export Dataset
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Total Images</h3>
-              <p className="text-2xl font-bold">15,847</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Labeled</h3>
-              <p className="text-2xl font-bold text-green-600">12,963</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Pending Review</h3>
-              <p className="text-2xl font-bold text-orange-600">2,884</p>
-            </Card>
-            <Card className="p-4">
-              <h3 className="font-semibold mb-2">Model Accuracy</h3>
-              <p className="text-2xl font-bold">87.5%</p>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* 9. Settings */}
-        <TabsContent value="settings" className="space-y-6">
-          <h2 className="text-2xl font-bold">Admin Settings</h2>
-          
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Team Members</h3>
-            <div className="space-y-4">
-              {[
-                { name: 'Joel Cedric', email: 'joelcedric237@gmail.com', role: 'Super Admin' },
-                { name: 'Admin User', email: 'admin@agroeng.com', role: 'Admin' },
-                { name: 'Content Editor', email: 'editor@agroeng.com', role: 'Content Editor' }
-              ].map((member) => (
-                <div key={member.email} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h4 className="font-semibold">{member.name}</h4>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
-                  </div>
-                  <Badge variant="outline">{member.role}</Badge>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">System Settings</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span>AI Scan Limits (Free Tier)</span>
-                <Input type="number" defaultValue="10" className="w-20" />
-              </div>
-              <div className="flex items-center justify-between">
-                <span>AI Scan Limits (Premium Tier)</span>
-                <Input type="number" defaultValue="100" className="w-20" />
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Enable Offline Mode</span>
-                <Badge variant="secondary">Premium Only</Badge>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+          {/* Add other tab contents as needed */}
+          {activeTab !== 'overview' && activeTab !== 'crops' && (
+            <View style={styles.tabContent}>
+              <Text style={styles.comingSoonText}>
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} management coming soon...
+              </Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingTop: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  badge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  badgeText: {
+    fontSize: 12,
+    color: '#22c55e',
+    fontWeight: '500',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  tabScrollView: {
+    marginBottom: 24,
+  },
+  tabsList: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    padding: 4,
+  },
+  tab: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    marginRight: 4,
+    minWidth: 80,
+  },
+  activeTab: {
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6b7280',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  activeTabText: {
+    color: '#22c55e',
+  },
+  tabContent: {
+    marginTop: 8,
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  metricCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    width: '48%',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  metricContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metricText: {
+    marginLeft: 12,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  topCropsCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 16,
+  },
+  cropsList: {
+    marginTop: 8,
+  },
+  cropItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cropRank: {
+    fontSize: 14,
+    color: '#1f2937',
+  },
+  cropBadge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  cropBadgeText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+  },
+  primaryButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  primaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginLeft: 4,
+  },
+  secondaryButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  secondaryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#22c55e',
+    marginLeft: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1f2937',
+    marginLeft: 8,
+  },
+  cropsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  cropCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    padding: 16,
+    width: '48%',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cropCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  cropName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  cropActions: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    padding: 4,
+    marginLeft: 4,
+  },
+  cropScientific: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  diseasesBadge: {
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignSelf: 'flex-start',
+  },
+  diseasesBadgeText: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  comingSoonText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginTop: 32,
+  },
+});
