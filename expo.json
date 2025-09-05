@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Farm Health Mate",
-    "slug": "farm-health-mate",
+    "name": "AgroEng",
+    "slug": "AgroEng",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -17,14 +17,14 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.agroeng.farmhealthmate"
+      "bundleIdentifier": "com.agroeng.AgroEng"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#22c55e"
       },
-      "package": "com.agroeng.farmhealthmate"
+      "package": "com.agroeng.AgroEng"
     },
     "web": {
       "bundler": "metro",
@@ -36,13 +36,13 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow Farm Health Mate to access your camera to take photos of plants for diagnosis."
+          "cameraPermission": "Allow AgroEng to access your camera to take photos of plants for diagnosis."
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "scheme": "farm-health-mate"
+    "scheme": "AgroEng"
   }
 }
