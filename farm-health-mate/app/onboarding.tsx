@@ -1,76 +1,59 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
-  ScrollView,
+  Dimensions,
+  SafeAreaView,
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-interface Slide {
-  icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  description: string;
-  gradient: string[];
-}
-
-const slides: Slide[] = [
+const onboardingData = [
   {
-    icon: 'camera-outline',
-    title: 'Snap. Compare. Save Your Crops.',
-    description: 'Take a photo of any plant or crop to get instant health insights powered by AI.',
-    gradient: ['#22c55e', '#16a34a']
+    id: 1,
+    title: 'Welcome to Farm Health Mate',
+    description: 'Your AI-powered companion for crop health monitoring and agricultural insights.',
+    icon: 'leaf-outline' as const,
   },
   {
-    icon: 'search-outline',
-    title: 'AI diagnoses issues instantly & recommends solutions.',
-    description: 'See side-by-side comparisons with healthy plants and get expert recommendations.',
-    gradient: ['#3b82f6', '#1d4ed8']
+    id: 2,
+    title: 'Smart Crop Analysis',
+    description: 'Take photos of your crops and get instant AI-powered health assessments and recommendations.',
+    icon: 'camera-outline' as const,
   },
   {
-    icon: 'shield-checkmark-outline',
-    title: 'Protect your yield. Anytime. Anywhere.',
-    description: 'Works offline with multilingual support. Your farming assistant is always ready.',
-    gradient: ['#10b981', '#059669']
-  }
+    id: 3,
+    title: 'Expert Guidance',
+    description: 'Access personalized tips, treatment suggestions, and best practices for optimal crop health.',
+    icon: 'bulb-outline' as const,
+  },
 ];
 
 export default function Onboarding() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = new Animated.Value(1);
 
   const nextSlide = () => {
-    if (currentSlide < slides.length - 1) {
-      const nextIndex = currentSlide + 1;
-      
-      // Fade out animation
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        setCurrentSlide(nextIndex);
-        scrollViewRef.current?.scrollTo({
-          x: nextIndex * width,
-          animated: false,
-        });
-        
-        // Fade in animation
+    if (currentSlide < onboardingData.length - 1) {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 150,
           useNativeDriver: true,
-        }).start();
-      });
+        }),
+      ]).start();
+      setCurrentSlide(currentSlide + 1);
     } else {
       router.replace('/auth');
     }
@@ -78,145 +61,100 @@ export default function Onboarding() {
 
   const prevSlide = () => {
     if (currentSlide > 0) {
-      const prevIndex = currentSlide - 1;
-      
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        setCurrentSlide(prevIndex);
-        scrollViewRef.current?.scrollTo({
-          x: prevIndex * width,
-          animated: false,
-        });
-        
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 150,
           useNativeDriver: true,
-        }).start();
-      });
+        }),
+      ]).start();
+      setCurrentSlide(currentSlide - 1);
     }
   };
 
-  const goToSlide = (index: number) => {
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => {
-      setCurrentSlide(index);
-      scrollViewRef.current?.scrollTo({
-        x: index * width,
-        animated: false,
-      });
-      
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
+  const skipOnboarding = () => {
+    router.replace('/auth');
   };
 
-  const currentSlideData = slides[currentSlide];
+  const goToSlide = (index: number) => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    setCurrentSlide(index);
+  };
+
+  const currentData = onboardingData[currentSlide];
 
   return (
-    <LinearGradient
-      colors={['#f8fafc', '#e2e8f0']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#22c55e', '#16a34a']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
+        {/* Skip Button */}
         <View style={styles.header}>
-          <Text style={styles.appTitle}>AgroEng AI</Text>
-          <Text style={styles.appSubtitle}>Your Smart Farming Assistant</Text>
+          <TouchableOpacity onPress={skipOnboarding} style={styles.skipButton}>
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Slide Content */}
-        <Animated.View style={[styles.slideContainer, { opacity: fadeAnim }]}>
-          <LinearGradient
-            colors={currentSlideData.gradient}
-            style={styles.slideCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.iconContainer}>
-              <View style={styles.iconBackground}>
-                <Ionicons 
-                  name={currentSlideData.icon} 
-                  size={48} 
-                  color="#ffffff" 
-                />
-              </View>
-            </View>
-            
-            <Text style={styles.slideTitle}>
-              {currentSlideData.title}
-            </Text>
-            
-            <Text style={styles.slideDescription}>
-              {currentSlideData.description}
-            </Text>
-          </LinearGradient>
+        {/* Content */}
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          <View style={styles.iconContainer}>
+            <Ionicons name={currentData.icon} size={80} color="white" />
+          </View>
+          
+          <Text style={styles.title}>{currentData.title}</Text>
+          <Text style={styles.description}>{currentData.description}</Text>
         </Animated.View>
 
         {/* Pagination Dots */}
         <View style={styles.pagination}>
-          {slides.map((_, index) => (
+          {onboardingData.map((_, index) => (
             <TouchableOpacity
               key={index}
               onPress={() => goToSlide(index)}
               style={[
                 styles.dot,
-                {
-                  backgroundColor: index === currentSlide ? '#22c55e' : '#cbd5e1',
-                  transform: [{ scale: index === currentSlide ? 1.2 : 1 }]
-                }
+                index === currentSlide ? styles.activeDot : styles.inactiveDot,
               ]}
             />
           ))}
         </View>
 
-        {/* Navigation */}
+        {/* Navigation Buttons */}
         <View style={styles.navigation}>
           <TouchableOpacity
             onPress={prevSlide}
-            disabled={currentSlide === 0}
             style={[
               styles.navButton,
-              styles.prevButton,
-              { opacity: currentSlide === 0 ? 0.3 : 1 }
+              currentSlide === 0 ? styles.disabledButton : styles.enabledButton,
             ]}
+            disabled={currentSlide === 0}
           >
-            <Ionicons name="chevron-back" size={24} color="#64748b" />
+            <Text style={[
+              styles.navButtonText,
+              currentSlide === 0 ? styles.disabledText : styles.enabledText,
+            ]}>
+              Previous
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={nextSlide}
-            style={[styles.navButton, styles.nextButton]}
-          >
-            <LinearGradient
-              colors={['#22c55e', '#16a34a']}
-              style={styles.nextButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <Text style={styles.nextButtonText}>
-                {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
-              </Text>
-              {currentSlide < slides.length - 1 && (
-                <Ionicons name="chevron-forward" size={20} color="#ffffff" />
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => router.replace('/auth')}
-            style={styles.skipButton}
-          >
-            <Text style={styles.skipButtonText}>Skip</Text>
+          <TouchableOpacity onPress={nextSlide} style={styles.nextButton}>
+            <Text style={styles.nextButtonText}>
+              {currentSlide === onboardingData.length - 1 ? 'Get Started' : 'Next'}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -230,68 +168,45 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   header: {
-    alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 40,
+    alignItems: 'flex-end',
+    paddingTop: 20,
   },
-  appTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#22c55e',
-    marginBottom: 8,
+  skipButton: {
+    padding: 10,
   },
-  appSubtitle: {
+  skipText: {
+    color: 'white',
     fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
+    fontWeight: '500',
   },
-  slideContainer: {
+  content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  slideCard: {
-    width: width - 48,
-    borderRadius: 24,
-    padding: 32,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    paddingHorizontal: 20,
   },
   iconContainer: {
-    marginBottom: 24,
-  },
-  iconBackground: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    marginBottom: 40,
+    padding: 20,
+    borderRadius: 100,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  slideTitle: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: 'white',
     textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 32,
+    marginBottom: 20,
   },
-  slideDescription: {
+  description: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: 'white',
     textAlign: 'center',
     lineHeight: 24,
+    opacity: 0.9,
   },
   pagination: {
     flexDirection: 'row',
@@ -300,57 +215,54 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginHorizontal: 4,
-    transition: 'all 0.3s ease',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  activeDot: {
+    backgroundColor: 'white',
+  },
+  inactiveDot: {
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   navigation: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    alignItems: 'center',
+    paddingBottom: 20,
   },
   navButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  prevButton: {
-    backgroundColor: '#f1f5f9',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+  },
+  enabledButton: {
+    borderColor: 'white',
+  },
+  disabledButton: {
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  enabledText: {
+    color: 'white',
+  },
+  disabledText: {
+    color: 'rgba(255, 255, 255, 0.3)',
   },
   nextButton: {
-    flex: 1,
-    marginHorizontal: 16,
-    height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
-  },
-  nextButtonGradient: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 12,
     paddingHorizontal: 24,
+    borderRadius: 25,
   },
   nextButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginRight: 8,
-  },
-  skipButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  skipButtonText: {
+    color: '#22c55e',
     fontSize: 16,
-    color: '#64748b',
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

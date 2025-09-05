@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "AgroEng AI",
-    "slug": "agroeng-ai",
+    "name": "Farm Health Mate",
+    "slug": "farm-health-mate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -15,23 +15,18 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.agroeng.ai"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.agroeng.ai"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router"
-    ],
-    "scheme": "agroeng-ai"
+    "scheme": "farm-health-mate"
   }
 }

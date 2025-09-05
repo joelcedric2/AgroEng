@@ -1,37 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Auth() {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Authentication Page</Text>
-        <Text style={styles.subtitle}>Coming next...</Text>
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <Text style={styles.text}>Auth Screen - Coming Next!</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  content: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    backgroundColor: '#f5f5f5',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#22c55e',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#64748b',
+  text: {
+    fontSize: 18,
+    color: '#333',
   },
 });
